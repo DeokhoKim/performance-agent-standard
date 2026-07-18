@@ -1,0 +1,15 @@
+# Python virtual environments
+.venv/
+venv/
+ENV/
+*.egg-info/
+.eggs/
+
+# Python cache and bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/

@@ -4,7 +4,41 @@ This repository provides baseline rules, hooks, and guidelines for development e
 
 It uses a flexible compilation architecture to merge shared guidelines (e.g., High-Density Markdown Writing Rules) with provider-specific extensions while preventing config conflicts (like hook structures) across different agents.
 
-## Architecture
+## User Guide
+
+### Installation
+
+You can install the rules and hooks for your supported agents either globally via scripts or using pre-packaged zip releases.
+
+#### Option 1: Global Script Installation
+If you have cloned the repository, you can run the install script:
+
+```bash
+# Install all supported agent configurations globally
+./scripts/install.sh
+
+# Install only for a specific agent (e.g., Claude Code)
+./scripts/install.sh --provider claude
+```
+
+#### Option 2: Pre-packaged Zip Releases
+Alternatively, you can download a pre-packaged `.zip` release from the GitHub Releases page and extract it directly into your agent's isolated plugin directory:
+- **Gemini**: Extract to `~/.gemini/antigravity-cli/plugins/performance-agent-standards/`
+- **Claude**: Extract to `~/.claude/plugins/performance-agent-standards/`
+- **Codex**: Extract to `~/.codex/plugins/performance-agent-standards/`
+
+### Automated Quality-Control Hooks
+
+This plugin registers post-tool hooks that run dynamically in your workspace immediately after any file-writing or editing tool completes execution.
+
+*   **`validate-markdown.sh`**:
+    *   **Role**: Validates that all newly created or modified Markdown (`.md`) files conform to High-Density Markdown (HDMD) guidelines.
+    *   **Behavior**: If inline topic tags (e.g., `#standards`, `#typing`) are used in a document, it enforces that the file must start with a YAML frontmatter block containing a `topics:` index key. It rejects the edit (exits 1) if this index is missing.
+    *   **Integration**: Automatically registered under Gemini's `hooks.json` and Claude Code's `settings.json` for file edit events (`Write`, `Edit`, `write_to_file`, etc.).
+
+## Developer Guide
+
+### Architecture
 
 To prevent structural and syntax conflicts, rules and hooks are isolated by provider in the `providers/` directory and compiled into `dist/` before deployment:
 
@@ -45,29 +79,20 @@ performance-agent-standards/
 │   └── validate-markdown.sh    # Tool/Git hook script to validate markdown syntax
 ```
 
-## Compilation and Installation
+### Compilation & Manual Packaging
 
-The plugin provides scripts to compile and install the rules and hooks globally to your user-level configuration folders (e.g., `~/.gemini/` or `~/.claude/`):
+To compile changes or package the release artifacts manually:
 
-### Global Installation (User Configuration)
-
+#### 1. Compile Rules
 ```bash
-# Install all supported agent configurations globally
-./scripts/install.sh
-
-# Install only for a specific agent (e.g., Claude Code)
-./scripts/install.sh --provider claude
+# Merge shared rules & configs with provider-specific ones into dist/
+./scripts/compile.sh
 ```
 
-### Packaging Release Artifacts
-To distribute the compiled rules without requiring end-users to run compilation or install scripts, you can package the compiled directory structures under `dist/` into separate zip release artifacts.
-
-To package the artifacts manually:
+#### 2. Package Release Artifacts
+You can package the compiled directory structures under `dist/` into separate zip release artifacts to distribute them without requiring end-users to run compilation or install scripts:
 
 ```bash
-# Ensure the rules are compiled first
-./scripts/compile.sh
-
 # Zip the compiled Gemini/Antigravity plugin
 (cd dist/gemini && zip -r ../../performance-agent-standards-gemini.zip .)
 
@@ -78,26 +103,9 @@ To package the artifacts manually:
 (cd dist/codex && zip -r ../../performance-agent-standards-codex.zip .)
 ```
 
-These generated `.zip` files can then be uploaded as release assets on the GitHub Releases page. End-users can install them by simply downloading and extracting them directly into their agent's isolated plugin directories:
-- **Gemini**: Extract to `~/.gemini/antigravity-cli/plugins/performance-agent-standards/`
-- **Claude**: Extract to `~/.claude/plugins/performance-agent-standards/`
-- **Codex**: Extract to `~/.codex/plugins/performance-agent-standards/`
+These generated `.zip` files can then be uploaded as release assets on the GitHub Releases page.
 
-
-## Automated Quality-Control Hooks
-
-This repository configures an automated post-tool hook (`validate-markdown.sh`) to guarantee rule compliance during agent editing sessions.
-
-### Agent Post-Tool Hooks (PostToolUse)
-These hooks run dynamically inside the agent's workspace immediately after any file-writing or editing tool completes execution.
-
-*   **`validate-markdown.sh`**:
-    *   **Role**: Validates that all newly created or modified Markdown (`.md`) files conform to High-Density Markdown (HDMD) guidelines.
-    *   **Logic**: If inline topic tags (e.g., `#standards`, `#typing`) are used in a document, it enforces that the file must start with a YAML frontmatter block containing a `topics:` index key. It rejects the edit (exits 1) if this index is missing.
-    *   **Integration**: Automatically registered under Gemini's `hooks.json` and Claude Code's `settings.json` for file edit events (`Write`, `Edit`, `write_to_file`, etc.).
-
-
-## Development Environment Setup
+### Local Development Setup
 
 This project uses `pyproject.toml` to manage formatting and the virtual environment. To set up and prepare the local development environment, use `uv` (a fast Python package installer and resolver):
 

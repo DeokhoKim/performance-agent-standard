@@ -131,7 +131,7 @@ compile_provider_skills() {
           ' "$skill_file"
         fi
         printf -- "---\n\n"
-        printf "%s\n" "$body"
+        printf "%s\n" "$body" | awk 'NF{found=1} found{print}'
       } > "${dest_skills_dir}/${skill_name}/SKILL.md"
 
       # Replace relative script paths with absolute paths inside the compiled SKILL.md

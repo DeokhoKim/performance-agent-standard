@@ -47,28 +47,16 @@ performance-agent-standards/
 
 ## Compilation and Installation
 
-The plugin provides scripts to easily compile and install the rules and hooks either globally (affecting all projects for that agent) or locally (affecting only the target workspace).
+The plugin provides scripts to compile and install the rules and hooks globally to your user-level configuration folders (e.g., `~/.gemini/` or `~/.claude/`):
 
 ### Global Installation (User Configuration)
-Installs rules and hooks to your user-level configuration folders (e.g., `~/.gemini/` or `~/.claude/`):
 
 ```bash
 # Install all supported agent configurations globally
-./scripts/install.sh --global
+./scripts/install.sh
 
 # Install only for a specific agent (e.g., Claude Code)
-./scripts/install.sh --global --provider claude
-```
-
-### Local Workspace Installation
-Installs rules and hooks to a specific workspace directory (e.g., copying compiled rules to a project root):
-
-```bash
-# Install all configurations locally to a target project
-./scripts/install.sh --local /path/to/your/project
-
-# Install only Gemini configurations locally
-./scripts/install.sh --local /path/to/your/project --provider gemini
+./scripts/install.sh --provider claude
 ```
 
 ### Packaging Release Artifacts

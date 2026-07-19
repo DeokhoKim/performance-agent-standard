@@ -28,3 +28,4 @@ Step: 3. Commit Message Generation:
 
 Step: 4. Execution:
 - Rule: Execute `git commit -m "<message>"` immediately. No user confirmation required.
+  - Exception: If the commit fails due to pre-commit hook fixes, the agent may run `git add` ONLY on already-staged files to update their index state, then retry the commit once. No other files can be added.

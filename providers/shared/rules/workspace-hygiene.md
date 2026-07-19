@@ -9,6 +9,10 @@ Req: Prevent Speculative File Access: Minimize target file reads to strictly rel
 - Rule: Speculative searching or pattern-matching (e.g., grepping for files by name or common keywords) is prohibited.
 - Rule: Speculative reading or search is ONLY permitted when the agent is blocked by a concrete tool execution, compilation, or dependency resolution error that requires discovering a missing file or path.
 
+Section: Git Commit Hygiene
+Req: Prevent Premature Version Control: Avoid staging or committing incomplete changes.
+- Rule: Agents MUST NOT stage (`git add`) or commit (`git commit`) files unless explicitly planned, or specifically required to isolate completed progress.
+
 Section: Rules Resolution Priority
 Req: Resolve Rule Conflicts: Apply workspace-level priority when resolving duplicate or conflicting guidelines.
 - Rule: Precedence hierarchy is: Local Workspace rules (highest priority) > Plugin rules (medium priority) > Global User rules (lowest priority).

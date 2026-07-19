@@ -1,0 +1,6 @@
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "name": "performance-agent-standards",
+  "version": "__VERSION__",
+  "description": "Google Antigravity plugin enforcing performance-oriented coding standards, inline shell execution rules, and token-efficient HDMD writing guidelines."
+}

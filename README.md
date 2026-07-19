@@ -93,7 +93,10 @@ To compile changes or package the release artifacts manually:
 You can package the compiled directory structures under `dist/` into separate zip release artifacts to distribute them without requiring end-users to run compilation or install scripts:
 
 ```bash
-# Zip the compiled Gemini/Antigravity plugin
+# Zip the compiled Antigravity plugin
+(cd dist/antigravity && zip -r ../../performance-agent-standards-antigravity.zip .)
+
+# Zip the compiled legacy Gemini plugin
 (cd dist/gemini && zip -r ../../performance-agent-standards-gemini.zip .)
 
 # Zip the compiled Claude Code plugin

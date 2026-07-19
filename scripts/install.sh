@@ -13,6 +13,11 @@ log_info() {
   printf "%b[INFO]%b %s\n" "$green" "$NC" "$1"
 }
 
+log_warn() {
+  local yellow='\033[1;33m'
+  printf "%b[WARN]%b %s\n" "$yellow" "$NC" "$1"
+}
+
 log_error() {
   local red='\033[0;31m'
   printf "%b[ERROR]%b %s\n" "$red" "$NC" "$1" >&2
@@ -21,7 +26,7 @@ log_error() {
 print_usage() {
   printf "Usage: %s [options]\n" "$0"
   printf "Options:\n"
-  printf "  --provider <name>         Limit installation to a specific provider (gemini, claude, codex, all)\n"
+  printf "  --provider <name>         Limit installation to a specific provider (antigravity, gemini, claude, codex, all)\n"
   printf "  -h, --help                Show this help message\n"
 }
 
@@ -45,24 +50,55 @@ while [[ "$#" -gt 0 ]]; do
   esac
 done
 
-install_gemini() {
+install_antigravity() {
   local dest_plugin="${HOME}/.gemini/antigravity-cli/plugins/performance-agent-standards"
+  local src_dir="${BASE_DIR}/dist/antigravity"
 
-  log_info "Installing Gemini / Antigravity globally to isolated plugin dir: $dest_plugin"
+  log_info "Installing Antigravity globally to isolated plugin dir: $dest_plugin"
   mkdir -p "$dest_plugin"
 
   # Copy plugin files recursively (rules are isolated inside the plugin directory)
-  cp -r "${BASE_DIR}/dist/gemini"/* "$dest_plugin/"
+  cp -r "$src_dir"/* "$dest_plugin/"
   chmod +x "$dest_plugin/scripts"/*.sh
-
-  # Replace relative path with absolute plugin path in hooks.json
-  sed -i "s|\"./scripts/validate-markdown.sh\"|\"$dest_plugin/scripts/validate-markdown.sh\"|g" "$dest_plugin/hooks.json"
-  sed -i "s|\"./scripts/validate-format.sh\"|\"$dest_plugin/scripts/validate-format.sh\"|g" "$dest_plugin/hooks.json"
+  if [[ -d "$dest_plugin/skills" ]]; then
+    find "$dest_plugin/skills" -type f -name "*.sh" -exec chmod +x {} +
+  fi
 
   # Register the plugin with the Antigravity CLI if available
-  command -v agy &>/dev/null || { log_info "Antigravity CLI (agy) not found in PATH, skipping CLI registration."; return 0; }
-  log_info "Registering plugin with Antigravity CLI..."
-  agy plugin install "$dest_plugin"
+  if command -v agy &>/dev/null; then
+    log_info "Registering plugin with Antigravity CLI (agy)..."
+    agy plugin install "$dest_plugin"
+  else
+    log_info "Antigravity CLI (agy) not found in PATH, skipping registration."
+  fi
+}
+
+install_gemini() {
+  local dest_plugin="${HOME}/.gemini/plugins/performance-agent-standards"
+  local src_dir="${BASE_DIR}/dist/gemini"
+
+  # Warn if modern agy is already installed to prevent confusion
+  if [[ -d "${HOME}/.gemini/antigravity-cli" || -n "$(command -v agy)" ]]; then
+    log_warn "Modern Antigravity CLI (agy) appears to be installed on this system. You are about to install the legacy 'gemini' plugin. If you meant to install the modern plugin, please cancel and run with --provider antigravity instead."
+  fi
+
+  log_info "Installing Legacy Gemini globally to isolated plugin dir: $dest_plugin"
+  mkdir -p "$dest_plugin"
+
+  # Copy plugin files recursively (rules are isolated inside the plugin directory)
+  cp -r "$src_dir"/* "$dest_plugin/"
+  chmod +x "$dest_plugin/scripts"/*.sh
+  if [[ -d "$dest_plugin/skills" ]]; then
+    find "$dest_plugin/skills" -type f -name "*.sh" -exec chmod +x {} +
+  fi
+
+  # Register the plugin with the Gemini CLI if available
+  if command -v gemini &>/dev/null; then
+    log_info "Registering plugin with Gemini CLI..."
+    gemini plugin install "$dest_plugin"
+  else
+    log_info "Gemini CLI not found in PATH, skipping registration."
+  fi
 }
 
 install_claude() {
@@ -115,11 +151,17 @@ install_claude() {
     ' "$dest_dir/settings.json" > "$temp_json"
     mv "$temp_json" "$dest_dir/settings.json"
   else
-    # If settings.json does not exist, copy from plugin and rewrite paths
+    # If settings.json does not exist, copy from plugin
     cp "${BASE_DIR}/dist/claude/.claude/settings.json" "$dest_dir/settings.json"
-    sed -i "s|\"./scripts/validate-markdown.sh\"|\"$dest_plugin/scripts/validate-markdown.sh\"|g" "$dest_dir/settings.json"
-    sed -i "s|\"./scripts/validate-format.sh\"|\"$dest_plugin/scripts/validate-format.sh\"|g" "$dest_dir/settings.json"
   fi
+
+  if [[ -d "${BASE_DIR}/dist/claude/.claude/skills" ]]; then
+    mkdir -p "${dest_dir}/skills"
+    cp -r "${BASE_DIR}/dist/claude/.claude/skills"/* "${dest_dir}/skills/"
+    find "${dest_dir}/skills" -type f -name "*.sh" -exec chmod +x {} +
+  fi
+
+
 }
 
 install_codex() {
@@ -169,10 +211,17 @@ install_codex() {
     ' "$dest_dir/settings.json" > "$temp_json"
     mv "$temp_json" "$dest_dir/settings.json"
   else
+    # If settings.json does not exist, copy from plugin
     cp "${BASE_DIR}/dist/codex/.codex/settings.json" "$dest_dir/settings.json"
-    sed -i "s|\"./scripts/validate-markdown.sh\"|\"$dest_plugin/scripts/validate-markdown.sh\"|g" "$dest_dir/settings.json"
-    sed -i "s|\"./scripts/validate-format.sh\"|\"$dest_plugin/scripts/validate-format.sh\"|g" "$dest_dir/settings.json"
   fi
+
+  if [[ -d "${BASE_DIR}/dist/codex/.codex/skills" ]]; then
+    mkdir -p "${dest_dir}/skills"
+    cp -r "${BASE_DIR}/dist/codex/.codex/skills"/* "${dest_dir}/skills/"
+    find "${dest_dir}/skills" -type f -name "*.sh" -exec chmod +x {} +
+  fi
+
+
 }
 
 # Verify dist directory exists before installing
@@ -180,6 +229,9 @@ install_codex() {
 
 # Execute installation
 case "$PROVIDER" in
+  antigravity)
+    install_antigravity
+    ;;
   gemini)
     install_gemini
     ;;
@@ -190,7 +242,15 @@ case "$PROVIDER" in
     install_codex
     ;;
   all)
-    install_gemini
+    # Detect which Gemini/Antigravity flavor to install based on CLI command presence
+    if command -v agy &>/dev/null; then
+      install_antigravity
+    elif command -v gemini &>/dev/null; then
+      install_gemini
+    else
+      # Default fallback to modern Antigravity
+      install_antigravity
+    fi
     install_claude
     install_codex
     ;;

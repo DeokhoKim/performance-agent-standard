@@ -1,0 +1,8 @@
+argument-hint: "[target] [draft/ready] [language]"
+arguments:
+  - name: target
+    description: Target branch to open the PR against. Defaults to the repository's default branch.
+  - name: draft/ready
+    description: PR status. 'draft' (default) or 'ready'.
+  - name: language
+    description: Language for the PR title and description. Defaults to Korean.

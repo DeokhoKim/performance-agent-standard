@@ -1,0 +1,3 @@
+name: staged-commit
+description: "Generates comprehensive git commit messages for staged changes and commits them. Use this skill only via the /staged-commit slash command."
+disable-model-invocation: true

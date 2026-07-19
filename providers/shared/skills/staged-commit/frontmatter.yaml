@@ -1,0 +1,2 @@
+name: staged-commit
+description: "Generates comprehensive git commit messages for staged changes and commits them. Compares staged changes against an optional target branch. This skill is ONLY activated via the /staged-commit slash command. Do NOT activate this skill from natural language commit requests."

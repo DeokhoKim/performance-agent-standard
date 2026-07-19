@@ -4,15 +4,15 @@ set -euo pipefail
 # This script compiles and merges shared rules & configs with provider-specific ones
 # and outputs them into the `dist/` directory.
 
-# Standard log colors
-CYAN='\033[0;36m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
 NC='\033[0m'
 
 BASE_DIR=${BASE_DIR:-"$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"}
 DIST_DIR=${DIST_DIR:-"${BASE_DIR}/dist"}
+
+log_info() {
+  local green='\033[0;32m'
+  printf "%b[INFO]%b %s\n" "$green" "$NC" "$1"
+}
 
 # Extract project version from pyproject.toml
 VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' "${BASE_DIR}/pyproject.toml")
@@ -79,7 +79,7 @@ SHARED_RULES=(
 )
 
 # 1. Compile Gemini / Antigravity
-printf "${GREEN}[INFO]${NC} Compiling Gemini / Antigravity...\n"
+log_info "Compiling Gemini / Antigravity..."
 mkdir -p "${DIST_DIR}/gemini/rules"
 
 # Compile Core Rule
@@ -107,7 +107,7 @@ cp "${BASE_DIR}/scripts/validate-markdown.sh" "${DIST_DIR}/gemini/scripts/"
 cp "${BASE_DIR}/scripts/validate-format.sh" "${DIST_DIR}/gemini/scripts/"
 
 # 2. Compile Claude Code
-printf "${GREEN}[INFO]${NC} Compiling Claude Code...\n"
+log_info "Compiling Claude Code..."
 mkdir -p "${DIST_DIR}/claude/.claude/rules"
 
 # Compile Core CLAUDE.md
@@ -132,7 +132,7 @@ cp "${BASE_DIR}/scripts/validate-markdown.sh" "${DIST_DIR}/claude/scripts/"
 cp "${BASE_DIR}/scripts/validate-format.sh" "${DIST_DIR}/claude/scripts/"
 
 # 3. Compile Codex
-printf "${GREEN}[INFO]${NC} Compiling Codex...\n"
+log_info "Compiling Codex..."
 mkdir -p "${DIST_DIR}/codex/.codex/rules"
 
 # Compile Core AGENTS.md (Codex convention — equivalent to CLAUDE.md)
@@ -156,4 +156,4 @@ cp "${BASE_DIR}/scripts/parse-hook-input.sh" "${DIST_DIR}/codex/scripts/"
 cp "${BASE_DIR}/scripts/validate-markdown.sh" "${DIST_DIR}/codex/scripts/"
 cp "${BASE_DIR}/scripts/validate-format.sh" "${DIST_DIR}/codex/scripts/"
 
-printf "${GREEN}[INFO]${NC} Compilation complete. Output generated in: %s\n" "$DIST_DIR"
+log_info "Compilation complete. Output generated in: ${DIST_DIR}"

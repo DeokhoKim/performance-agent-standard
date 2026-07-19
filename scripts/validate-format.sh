@@ -5,14 +5,22 @@ set -euo pipefail
 # Triggered as a PostToolUse hook by Gemini (Antigravity) or Claude Code.
 
 # --- Constants ---
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
 NC='\033[0m'
 MAX_LOG_LINES=10
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 
 # --- Functions (Single Responsibility) ---
+
+log_warn() {
+  local yellow='\033[1;33m'
+  printf "%b[WARN]%b %s\n" "$yellow" "$NC" "$1" >&2
+}
+
+log_error() {
+  local red='\033[0;31m'
+  printf "%b[ERROR]%b %s\n" "$red" "$NC" "$1" >&2
+}
 
 # Reads stdin and delegates to the shared parser utility.
 # Sets global: WORKSPACE_PATH, TARGET_FILE
@@ -43,7 +51,7 @@ is_prek_available() {
 
   PREK_BIN="${REPO_ROOT}/.venv/bin/prek"
   [[ -x "$PREK_BIN" ]] || {
-    printf "${YELLOW}[WARN]${NC} prek not installed in .venv — run uv sync or pip install prek\n" >&2
+    log_warn "prek not installed in .venv — run uv sync or pip install prek"
     return 1
   }
 }
@@ -63,12 +71,13 @@ run_prek() {
 
   [[ "$exit_code" -eq 0 ]] && return 0
 
-  printf "${RED}[ERROR]${NC} prek validation failed" >&2
-  [[ -n "$TARGET_FILE" ]] && printf " for: %s" "$TARGET_FILE" >&2
-  printf "\n" >&2
+  local err_msg="prek validation failed"
+  [[ -n "$TARGET_FILE" ]] && err_msg="$err_msg for: $TARGET_FILE"
+  log_error "$err_msg"
+
   printf "%s\n" "$log_output" | head -n "$MAX_LOG_LINES" >&2
   [[ $(printf "%s\n" "$log_output" | wc -l) -gt $MAX_LOG_LINES ]] && \
-    printf "${YELLOW}[WARN]${NC} ... logs truncated to save agent token consumption.\n" >&2
+    log_warn "... logs truncated to save agent token consumption."
 }
 
 # Outputs the allow decision for the hook framework.

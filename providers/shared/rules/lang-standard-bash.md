@@ -32,3 +32,7 @@ Req: Bash Log Formatting & Inline Validation: Enforce clean inline test structur
 
 Req: Scoped Cleanup (Bash): Defensively manage exit states.
 - Rule: Trap Exit Handlers: Register `trap` handlers (e.g., `trap 'cleanup' EXIT`) immediately after creating temp files, acquiring locks, or changing directories to guarantee exit cleanup under `set -e`.
+
+Req: Documentation vs. Verification: Balance copy-paste readability with automated script safety.
+- Rule: Documentation Scoped Happy-Path: Guide examples (e.g., `README.md`) should assume an "implicit happy path" to maximize readability. If directory changes are required, use a scoped subshell `(cd path && command)` to prevent shell state pollution without adding verbose checks.
+- Rule: Non-Speculative Script Verification: Automated scripts must robustly check directory transitions, inputs, and commands (no happy paths). However, avoid speculative verification for highly remote or rare environment anomalies to keep scripts simple and prevent code bloat.

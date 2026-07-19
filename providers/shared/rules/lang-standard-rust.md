@@ -17,4 +17,3 @@ Req: Data-Flow Parallelism (Rust): Prefer message passing and parallel iterators
 
 Req: Scoped Cleanup (Rust): Leverage compiler lifetime management.
 - Rule: RAII and Drop Trait: Rely on RAII guards (e.g., `MutexGuard`) and structures implementing the `Drop` trait to automatically release resources and restore states. Avoid manual cleanup blocks.
-

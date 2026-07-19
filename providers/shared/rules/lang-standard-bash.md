@@ -22,4 +22,3 @@ Req: Bash Log Formatting & Inline Validation: Enforce clean inline test structur
 
 Req: Scoped Cleanup (Bash): Defensively manage exit states.
 - Rule: Trap Exit Handlers: Register `trap` handlers (e.g., `trap 'cleanup' EXIT`) immediately after creating temp files, acquiring locks, or changing directories to guarantee exit cleanup under `set -e`.
-

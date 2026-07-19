@@ -63,29 +63,29 @@ done
 install_gemini() {
   if [[ "$MODE" == "global" ]]; then
     local dest_plugin="${HOME}/.gemini/antigravity-cli/plugins/performance-agent-standards"
-    
+
     printf "${GREEN}[INFO]${NC} Installing Gemini / Antigravity globally to isolated plugin dir: %s\n" "$dest_plugin"
     mkdir -p "$dest_plugin"
-    
+
     # Copy plugin files recursively (rules are isolated inside the plugin directory)
     cp -r "${BASE_DIR}/dist/gemini"/* "$dest_plugin/"
     chmod +x "$dest_plugin/scripts"/*.sh
-    
+
     # Replace relative path with absolute plugin path in hooks.json
     sed -i "s|\"./scripts/validate-markdown.sh\"|\"$dest_plugin/scripts/validate-markdown.sh\"|g" "$dest_plugin/hooks.json"
     sed -i "s|\"./scripts/validate-format.sh\"|\"$dest_plugin/scripts/validate-format.sh\"|g" "$dest_plugin/hooks.json"
   else
     local dest_plugin="${TARGET_PATH}/.agents/plugins/performance-agent-standards"
     local dest_rules="${TARGET_PATH}/.gemini/rules"
-    
+
     printf "${GREEN}[INFO]${NC} Installing Gemini / Antigravity locally to workspace: %s\n" "$TARGET_PATH"
     mkdir -p "$dest_plugin"
     mkdir -p "$dest_rules"
-    
+
     cp -r "${BASE_DIR}/dist/gemini"/* "$dest_plugin/"
     cp "${BASE_DIR}/dist/gemini/rules"/*.md "$dest_rules/"
     chmod +x "$dest_plugin/scripts"/*.sh
-    
+
     # Replace relative path with workspace-relative path within plugin folder in hooks.json
     sed -i "s|\"./scripts/validate-markdown.sh\"|\"./.agents/plugins/performance-agent-standards/scripts/validate-markdown.sh\"|g" "$dest_plugin/hooks.json"
     sed -i "s|\"./scripts/validate-format.sh\"|\"./.agents/plugins/performance-agent-standards/scripts/validate-format.sh\"|g" "$dest_plugin/hooks.json"
@@ -96,15 +96,15 @@ install_claude() {
   if [[ "$MODE" == "global" ]]; then
     local dest_dir="${HOME}/.claude"
     local dest_plugin="${dest_dir}/plugins/performance-agent-standards"
-    
+
     printf "${GREEN}[INFO]${NC} Installing Claude Code globally to isolated plugin dir: %s\n" "$dest_plugin"
     mkdir -p "$dest_plugin"
-    
+
     # Copy plugin files recursively (keeps ~/.claude clean)
     cp -r "${BASE_DIR}/dist/claude/.claude" "$dest_plugin/"
     cp -r "${BASE_DIR}/dist/claude/scripts" "$dest_plugin/"
     chmod +x "$dest_plugin/scripts"/*.sh
-    
+
     # Programmatically merge CLAUDE.md instead of overwriting global file (SOLID & Safe)
     if [[ -f "$dest_dir/CLAUDE.md" ]]; then
       printf "${GREEN}[INFO]${NC} Appending rules to existing global CLAUDE.md...\n"
@@ -114,9 +114,9 @@ install_claude() {
     else
       cp "${BASE_DIR}/dist/claude/CLAUDE.md" "$dest_dir/CLAUDE.md"
     fi
-    
+
     cp "${BASE_DIR}/dist/claude/.claude/rules"/*.md "$dest_dir/rules/"
-    
+
     # Programmatically merge hooks instead of overwriting global settings.json (SOLID & Safe)
     if [[ -f "$dest_dir/settings.json" ]]; then
       printf "${GREEN}[INFO]${NC} Merging hooks into existing global settings.json...\n"
@@ -147,17 +147,17 @@ install_claude() {
     fi
   else
     local dest_dir="${TARGET_PATH}/.claude"
-    
+
     printf "${GREEN}[INFO]${NC} Installing Claude Code locally to workspace: %s\n" "$TARGET_PATH"
     mkdir -p "$dest_dir/scripts"
     mkdir -p "$dest_dir/rules"
-    
+
     cp "${BASE_DIR}/dist/claude/CLAUDE.md" "${TARGET_PATH}/CLAUDE.md"
     cp "${BASE_DIR}/dist/claude/.claude/settings.json" "$dest_dir/settings.json"
     cp "${BASE_DIR}/dist/claude/.claude/rules"/*.md "$dest_dir/rules/"
     cp -r "${BASE_DIR}/dist/claude/scripts"/* "$dest_dir/scripts/"
     chmod +x "$dest_dir/scripts"/*.sh
-    
+
     # Replace relative path with workspace-relative settings path in settings.json
     sed -i "s|\"./scripts/validate-markdown.sh\"|\"./.claude/scripts/validate-markdown.sh\"|g" "$dest_dir/settings.json"
     sed -i "s|\"./scripts/validate-format.sh\"|\"./.claude/scripts/validate-format.sh\"|g" "$dest_dir/settings.json"
@@ -168,15 +168,15 @@ install_codex() {
   if [[ "$MODE" == "global" ]]; then
     local dest_dir="${HOME}/.codex"
     local dest_plugin="${dest_dir}/plugins/performance-agent-standards"
-    
+
     printf "${GREEN}[INFO]${NC} Installing Codex globally to isolated plugin dir: %s\n" "$dest_plugin"
     mkdir -p "$dest_plugin"
-    
+
     # Copy plugin files recursively
     cp -r "${BASE_DIR}/dist/codex/.codex"/* "$dest_plugin/"
     cp -r "${BASE_DIR}/dist/codex/scripts" "$dest_plugin/"
     chmod +x "$dest_plugin/scripts"/*.sh
-    
+
     # Deploy AGENTS.md to global config
     if [[ -f "$dest_dir/AGENTS.md" ]]; then
       printf "${GREEN}[INFO]${NC} Appending rules to existing global AGENTS.md...\n"
@@ -186,7 +186,7 @@ install_codex() {
     else
       cp "${BASE_DIR}/dist/codex/AGENTS.md" "$dest_dir/AGENTS.md"
     fi
-    
+
     # Merge hooks into global settings.json
     if [[ -f "$dest_dir/settings.json" ]]; then
       printf "${GREEN}[INFO]${NC} Merging hooks into existing global settings.json...\n"
@@ -216,17 +216,17 @@ install_codex() {
     fi
   else
     local dest_dir="${TARGET_PATH}/.codex"
-    
+
     printf "${GREEN}[INFO]${NC} Installing Codex locally to workspace: %s\n" "$TARGET_PATH"
     mkdir -p "$dest_dir/rules"
     mkdir -p "$dest_dir/scripts"
-    
+
     cp "${BASE_DIR}/dist/codex/AGENTS.md" "${TARGET_PATH}/AGENTS.md"
     cp "${BASE_DIR}/dist/codex/.codex/settings.json" "$dest_dir/settings.json"
     cp "${BASE_DIR}/dist/codex/.codex/rules"/*.md "$dest_dir/rules/"
     cp -r "${BASE_DIR}/dist/codex/scripts"/* "$dest_dir/scripts/"
     chmod +x "$dest_dir/scripts"/*.sh
-    
+
     # Replace relative path with workspace-relative settings path
     sed -i "s|\"./scripts/validate-markdown.sh\"|\"./.codex/scripts/validate-markdown.sh\"|g" "$dest_dir/settings.json"
     sed -i "s|\"./scripts/validate-format.sh\"|\"./.codex/scripts/validate-format.sh\"|g" "$dest_dir/settings.json"

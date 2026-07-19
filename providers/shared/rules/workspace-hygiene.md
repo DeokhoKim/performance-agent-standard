@@ -13,4 +13,3 @@ Section: Rules Resolution Priority
 Req: Resolve Rule Conflicts: Apply workspace-level priority when resolving duplicate or conflicting guidelines.
 - Rule: Precedence hierarchy is: Local Workspace rules (highest priority) > Plugin rules (medium priority) > Global User rules (lowest priority).
 - Rule: Higher priority rules override conflicting rules defined at lower priority levels.
-

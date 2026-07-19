@@ -9,7 +9,7 @@ Requirement: Rules Interpretation: Rules MUST be machine-interpretable and trans
     FOR EACH line IN document:
       indent = count_leading_spaces(line)
       tag, content = extract_tag_and_content(line)
-      
+
       # Node scope applies to its line and all its indented children
       parent = FindParentForIndent(indent)
       parent.AddChild(Node(tag, content, indent))
@@ -28,7 +28,7 @@ Requirement: Rules Interpretation: Rules MUST be machine-interpretable and trans
     IF "→" IN node.content:
       term, val = split(node.content, "→")
       RETURN f"[{tag_name}] '{term.strip()}' translates to '{val.strip()}'."
-      
+
     RETURN f"[{tag_name}] {node.content} (Context: {node.parent.content})"
   ```
 

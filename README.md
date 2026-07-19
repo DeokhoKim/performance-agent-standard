@@ -69,13 +69,13 @@ To package the artifacts manually:
 ./scripts/compile.sh
 
 # Zip the compiled Gemini/Antigravity plugin
-cd dist/gemini && zip -r ../../performance-agent-standards-gemini.zip . && cd ../..
+(cd dist/gemini && zip -r ../../performance-agent-standards-gemini.zip .)
 
 # Zip the compiled Claude Code plugin
-cd dist/claude && zip -r ../../performance-agent-standards-claude.zip . && cd ../..
+(cd dist/claude && zip -r ../../performance-agent-standards-claude.zip .)
 
 # Zip the compiled Codex rules
-cd dist/codex && zip -r ../../performance-agent-standards-codex.zip . && cd ../..
+(cd dist/codex && zip -r ../../performance-agent-standards-codex.zip .)
 ```
 
 These generated `.zip` files can then be uploaded as release assets on the GitHub Releases page. End-users can install them by simply downloading and extracting them directly into their agent's isolated plugin directories:

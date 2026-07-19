@@ -1,0 +1,28 @@
+{
+  "validate-markdown": {
+    "PostToolUse": [
+      {
+        "matcher": "write_to_file|create_file|write_file|replace_file_content|multi_replace_file_content",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/validate-markdown.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "validate-format": {
+    "PostToolUse": [
+      {
+        "matcher": "write_to_file|create_file|write_file|replace_file_content|multi_replace_file_content",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/validate-format.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

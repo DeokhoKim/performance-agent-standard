@@ -1,0 +1,19 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|Create",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/validate-markdown.sh"
+          },
+          {
+            "type": "command",
+            "command": "./scripts/validate-format.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

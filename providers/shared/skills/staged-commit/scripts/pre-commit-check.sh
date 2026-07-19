@@ -41,4 +41,4 @@ staged_count=$(git diff --cached --numstat | wc -l)
 
 log_info "${staged_count} file(s) staged for commit."
 printf -- "---\n"
-git diff --cached --stat
+git diff --cached

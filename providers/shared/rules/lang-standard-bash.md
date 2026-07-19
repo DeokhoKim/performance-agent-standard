@@ -8,7 +8,7 @@ Req: Data-Flow Parallelism (Bash): Maximize shell pipeline streaming and OS buff
 - Rule: Stream Pipelines: Utilize native shell pipelines (`cmd1 | cmd2 | cmd3`) and named pipes (`mkfifo`) to stream data between processes, allowing the OS kernel to automatically manage buffering, synchronization, and parallel execution.
 
 Req: Bash Log Formatting & Inline Validation: Enforce clean inline test structures and portable colored logging.
-- Rule: Inline Error Checking: Prefer compact inline test and exit chains over verbose multiline block statements. The pattern `[[ condition ]] && { log_command; exit 1; }` (or `||` for failure checking) is preferred.
+- Rule: Inline Error Checking: Prefer compact inline test or exit status check chains (e.g., `command || { log_command; exit 1; }`) over verbose multiline block statements.
 - Rule: Standardized Format Logging: Always prefer `printf` over `echo` for logging and printing variables.
   - Explain: `printf` is standard POSIX compliant (avoiding cross-platform flags inconsistency like `-n` or `-e`), parses literal strings safely without flag interpretation, and provides robust formatting and reliable error exit statuses.
 - Rule: Standardized Log Level Functions: Wrap colored logging into dedicated level-specific functions (e.g., `log_info`, `log_error`, `log_warn`, `log_debug`).

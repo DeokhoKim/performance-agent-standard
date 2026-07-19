@@ -58,6 +58,11 @@ install_gemini() {
   # Replace relative path with absolute plugin path in hooks.json
   sed -i "s|\"./scripts/validate-markdown.sh\"|\"$dest_plugin/scripts/validate-markdown.sh\"|g" "$dest_plugin/hooks.json"
   sed -i "s|\"./scripts/validate-format.sh\"|\"$dest_plugin/scripts/validate-format.sh\"|g" "$dest_plugin/hooks.json"
+
+  # Register the plugin with the Antigravity CLI if available
+  command -v agy &>/dev/null || { log_info "Antigravity CLI (agy) not found in PATH, skipping CLI registration."; return 0; }
+  log_info "Registering plugin with Antigravity CLI..."
+  agy plugin install "$dest_plugin"
 }
 
 install_claude() {

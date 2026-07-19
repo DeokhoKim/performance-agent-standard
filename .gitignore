@@ -16,3 +16,6 @@ __pycache__/
 
 # Build output
 dist/
+
+# uv lockfile
+uv.lock

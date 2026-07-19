@@ -146,10 +146,25 @@ install_extracted_files() {
   local dest_plugin
   dest_plugin=$(get_dest_dir "$provider")
 
-  mkdir -p "$dest_plugin"
-
   case "$provider" in
     antigravity|gemini)
+      # CLI uninstall first if available
+      [[ "$provider" == "antigravity" ]] && command -v agy &>/dev/null && {
+        log_info "Uninstalling existing plugin via Antigravity CLI (agy)..."
+        agy plugin uninstall "performance-agent-standards" 2>/dev/null || true
+      }
+      [[ "$provider" == "gemini" ]] && command -v gemini &>/dev/null && {
+        log_info "Uninstalling existing plugin via Legacy Gemini CLI..."
+        gemini plugin uninstall "performance-agent-standards" 2>/dev/null || true
+      }
+
+      # Remove directory if it still exists
+      [[ -d "$dest_plugin" ]] && {
+        log_info "Cleaning up old plugin files in $dest_plugin..."
+        rm -rf "$dest_plugin"
+      }
+      mkdir -p "$dest_plugin"
+
       log_info "Deploying $provider plugin files to $dest_plugin..."
       cp -r "$src_dir"/* "$dest_plugin/"
       chmod +x "$dest_plugin/scripts"/*.sh 2>/dev/null || true
@@ -158,29 +173,63 @@ install_extracted_files() {
       fi
 
       # CLI registration
-      if [[ "$provider" == "antigravity" ]] && command -v agy &>/dev/null; then
+      [[ "$provider" == "antigravity" ]] && command -v agy &>/dev/null && {
         log_info "Registering plugin with Antigravity CLI (agy)..."
         agy plugin install "$dest_plugin"
-      elif [[ "$provider" == "gemini" ]] && command -v gemini &>/dev/null; then
+      }
+      [[ "$provider" == "gemini" ]] && command -v gemini &>/dev/null && {
         log_info "Registering plugin with Legacy Gemini CLI..."
         gemini plugin install "$dest_plugin"
-      fi
+      }
       ;;
 
     claude)
       local dest_dir="$HOME/.claude"
-      log_info "Deploying Claude Code plugin files to $dest_plugin..."
+
+      # Clean up removed rules from global rules directory before wiping $dest_plugin
+      [[ -d "$dest_plugin/.claude/rules" ]] && {
+        for old_rule in "$dest_plugin/.claude/rules"/*.md; do
+          [[ -f "$old_rule" ]] && {
+            local rule_name="${old_rule##*/}"
+            [[ ! -f "$src_dir/.claude/rules/$rule_name" ]] && {
+              log_info "Removing obsolete rule: $dest_dir/rules/$rule_name"
+              rm -f "$dest_dir/rules/$rule_name"
+            }
+          }
+        done
+      }
+
+      # Clean up removed skills from global skills directory before wiping $dest_plugin
+      [[ -d "$dest_plugin/.claude/skills" ]] && {
+        find "$dest_plugin/.claude/skills" -type f | while IFS= read -r old_skill; do
+          local rel_path="${old_skill#"$dest_plugin/.claude/skills/"}"
+          [[ ! -e "$src_dir/.claude/skills/$rel_path" ]] && {
+            log_info "Removing obsolete skill file: $dest_dir/skills/$rel_path"
+            rm -f "$dest_dir/skills/$rel_path"
+            local parent_dir="${dest_dir}/skills/${rel_path%/*}"
+            rmdir -p "$parent_dir" 2>/dev/null || true
+          }
+        done
+      }
+
+      # Clean up existing plugin directory to prevent orphaned files
+      [[ -d "$dest_plugin" ]] && {
+        log_info "Cleaning up old plugin files in $dest_plugin..."
+        rm -rf "$dest_plugin"
+      }
+      mkdir -p "$dest_plugin"
       mkdir -p "$dest_dir/rules"
 
+      log_info "Deploying Claude Code plugin files to $dest_plugin..."
       cp -r "$src_dir/.claude" "$dest_plugin/"
       cp -r "$src_dir/scripts" "$dest_plugin/"
       chmod +x "$dest_plugin/scripts"/*.sh
 
       # Idempotent CLAUDE.md merge
-      if [[ -f "$dest_dir/CLAUDE.md" ]]; then
+      [[ -f "$dest_dir/CLAUDE.md" ]] && {
         log_info "Merging rules into existing global CLAUDE.md..."
         "${SED_INPLACE[@]}" '/# --- performance-agent-standards rules begin ---/,/# --- performance-agent-standards rules end ---/d' "$dest_dir/CLAUDE.md"
-      fi
+      }
       {
         printf "\n\n# --- performance-agent-standards rules begin ---\n"
         cat "$src_dir/CLAUDE.md"
@@ -225,15 +274,36 @@ install_extracted_files() {
       fi
 
       # Deploy skills
-      if [[ -d "$src_dir/.claude/skills" ]]; then
+      [[ -d "$src_dir/.claude/skills" ]] && {
         mkdir -p "$dest_dir/skills"
         cp -r "$src_dir/.claude/skills"/* "$dest_dir/skills/"
         find "$dest_dir/skills" -type f -name "*.sh" -exec chmod +x {} + 2>/dev/null || true
-      fi
+      }
       ;;
 
     codex)
       local dest_dir="$HOME/.codex"
+
+      # Clean up removed skills from global skills directory before wiping $dest_plugin
+      [[ -d "$dest_plugin/skills" ]] && {
+        find "$dest_plugin/skills" -type f | while IFS= read -r old_skill; do
+          local rel_path="${old_skill#"$dest_plugin/skills/"}"
+          [[ ! -e "$src_dir/.codex/skills/$rel_path" ]] && {
+            log_info "Removing obsolete skill file: $dest_dir/skills/$rel_path"
+            rm -f "$dest_dir/skills/$rel_path"
+            local parent_dir="${dest_dir}/skills/${rel_path%/*}"
+            rmdir -p "$parent_dir" 2>/dev/null || true
+          }
+        done
+      }
+
+      # Clean up existing plugin directory to prevent orphaned files
+      [[ -d "$dest_plugin" ]] && {
+        log_info "Cleaning up old plugin files in $dest_plugin..."
+        rm -rf "$dest_plugin"
+      }
+      mkdir -p "$dest_plugin"
+
       log_info "Deploying Codex plugin files to $dest_plugin..."
 
       cp -r "$src_dir/.codex"/* "$dest_plugin/"
@@ -241,10 +311,10 @@ install_extracted_files() {
       chmod +x "$dest_plugin/scripts"/*.sh
 
       # Idempotent AGENTS.md merge
-      if [[ -f "$dest_dir/AGENTS.md" ]]; then
+      [[ -f "$dest_dir/AGENTS.md" ]] && {
         log_info "Merging rules into existing global AGENTS.md..."
         "${SED_INPLACE[@]}" '/# --- performance-agent-standards rules begin ---/,/# --- performance-agent-standards rules end ---/d' "$dest_dir/AGENTS.md"
-      fi
+      }
       {
         printf "\n\n# --- performance-agent-standards rules begin ---\n"
         cat "$src_dir/AGENTS.md"
@@ -285,11 +355,11 @@ install_extracted_files() {
       fi
 
       # Deploy skills
-      if [[ -d "$src_dir/.codex/skills" ]]; then
+      [[ -d "$src_dir/.codex/skills" ]] && {
         mkdir -p "$dest_dir/skills"
         cp -r "$src_dir/.codex/skills"/* "$dest_dir/skills/"
         find "$dest_dir/skills" -type f -name "*.sh" -exec chmod +x {} + 2>/dev/null || true
-      fi
+      }
       ;;
   esac
 }

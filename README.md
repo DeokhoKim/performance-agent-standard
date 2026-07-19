@@ -8,18 +8,25 @@ It uses a flexible compilation architecture to merge shared guidelines (e.g., Hi
 
 ### Installation
 
-You can install the rules and hooks for your supported agents either globally via scripts or using pre-packaged zip releases.
+You can install the rules and hooks for your supported agents using the universal installation script (without cloning the repo), from a local clone, or via pre-packaged zip releases.
 
-#### Option 1: Global Script Installation
-If you have cloned the repository, you can run the install script:
+#### Option 1: Universal Installation via URL (Recommended)
+This method auto-detects which agents are installed on your system (Antigravity, Legacy Gemini, Claude Code, or Codex), downloads their latest precompiled release ZIPs (or clones and compiles if no release is found), and installs/registers the plugin hooks automatically.
 
+You can install it with a single shell command:
 ```bash
-# Install all supported agent configurations globally
-./scripts/install.sh
-
-# Install only for a specific agent (e.g., Claude Code)
-./scripts/install.sh --provider claude
+curl -sSfL https://raw.githubusercontent.com/DeokhoKim/performance-agent-standard/main/scripts/install-universal.sh | bash
 ```
+
+**Customizing Installation:**
+*   **Specific Agent:** Force installation for a single agent only (e.g., `claude`):
+    ```bash
+    curl -sSfL https://raw.githubusercontent.com/DeokhoKim/performance-agent-standard/main/scripts/install-universal.sh | bash -s -- --provider claude
+    ```
+*   **Force Reinstallation:** Overwrite matching versions:
+    ```bash
+    curl -sSfL https://raw.githubusercontent.com/DeokhoKim/performance-agent-standard/main/scripts/install-universal.sh | bash -s -- --force
+    ```
 
 #### Option 2: Pre-packaged Zip Releases
 Alternatively, you can download a pre-packaged `.zip` release from the GitHub Releases page and extract it directly into your agent's isolated plugin directory:
@@ -75,7 +82,7 @@ performance-agent-standards/
 │       └── settings.json       # Codex settings/hooks (.codex/settings.json structure)
 ├── scripts/                    # Utility and hook scripts
 │   ├── compile.sh              # Merges shared rules & configs with provider-specific ones
-│   ├── install.sh              # Places the compiled files in appropriate user/workspace paths
+│   ├── install-universal.sh    # Universal installer and update script
 │   └── validate-markdown.sh    # Tool/Git hook script to validate markdown syntax
 ```
 

@@ -15,17 +15,17 @@ This method auto-detects which agents are installed on your system (Antigravity,
 
 You can install it with a single shell command:
 ```bash
-curl -sSfL https://raw.githubusercontent.com/DeokhoKim/performance-agent-standard/main/scripts/install-universal.sh | bash
+curl -sSfL https://raw.githubusercontent.com/DeokhoKim/performance-agent-standard/main/scripts/install.sh | bash
 ```
 
 **Customizing Installation:**
 *   **Specific Agent:** Force installation for a single agent only (e.g., `claude`):
     ```bash
-    curl -sSfL https://raw.githubusercontent.com/DeokhoKim/performance-agent-standard/main/scripts/install-universal.sh | bash -s -- --provider claude
+    curl -sSfL https://raw.githubusercontent.com/DeokhoKim/performance-agent-standard/main/scripts/install.sh | bash -s -- --provider claude
     ```
 *   **Force Reinstallation:** Overwrite matching versions:
     ```bash
-    curl -sSfL https://raw.githubusercontent.com/DeokhoKim/performance-agent-standard/main/scripts/install-universal.sh | bash -s -- --force
+    curl -sSfL https://raw.githubusercontent.com/DeokhoKim/performance-agent-standard/main/scripts/install.sh | bash -s -- --force
     ```
 
 #### Option 2: Pre-packaged Zip Releases
@@ -82,7 +82,7 @@ performance-agent-standards/
 │       └── settings.json       # Codex settings/hooks (.codex/settings.json structure)
 ├── scripts/                    # Utility and hook scripts
 │   ├── compile.sh              # Merges shared rules & configs with provider-specific ones
-│   ├── install-universal.sh    # Universal installer and update script
+│   ├── install.sh              # Universal installer and update script
 │   └── validate-markdown.sh    # Tool/Git hook script to validate markdown syntax
 ```
 

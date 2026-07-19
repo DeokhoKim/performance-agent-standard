@@ -37,7 +37,7 @@ log_error() {
 }
 
 print_usage() {
-  printf "Usage: install-universal.sh [options]\n"
+  printf "Usage: install.sh [options]\n"
   printf "Options:\n"
   printf "  --provider <name>  Assign a specific provider (antigravity, gemini, claude, codex, auto)\n"
   printf "                     Default is 'auto' (detects and installs all installed agents)\n"

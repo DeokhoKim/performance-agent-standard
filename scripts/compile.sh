@@ -159,7 +159,7 @@ compile_provider_skills() {
       # Replace relative script paths with absolute paths inside the compiled SKILL.md
       # Note: Agent platforms handle custom skill directories differently:
       # - Gemini/Antigravity supports complete plugin isolation, where custom skills reside
-      #   directly inside the plugin directory: ~/.gemini/antigravity-cli/plugins/<plugin-name>/skills/
+      #   directly inside the plugin directory: ~/.gemini/config/plugins/<plugin-name>/skills/
       # - Claude Code and Codex require custom skills to be placed in their centralized, flat
       #   global skill directories (~/.claude/skills/ and ~/.codex/skills/ respectively).
       # Therefore, the target global path for rewriting relative script paths in SKILL.md
@@ -167,7 +167,7 @@ compile_provider_skills() {
       local global_skill_dir
       case "$provider" in
         antigravity)
-          global_skill_dir="\$HOME/.gemini/antigravity-cli/plugins/performance-agent-standards/skills/${skill_name}"
+          global_skill_dir="\$HOME/.gemini/config/plugins/performance-agent-standards/skills/${skill_name}"
           ;;
         gemini)
           global_skill_dir="\$HOME/.gemini/plugins/performance-agent-standards/skills/${skill_name}"
@@ -294,7 +294,7 @@ compile_provider() {
     sed "s/__VERSION__/${VERSION}/g" "${BASE_DIR}/providers/gemini/plugin.json" > "${provider_dist}/plugin.json"
 
     # Replace relative path with absolute/home-relative path in hooks.json for pre-built/extracted plugins
-    local global_dest_plugin="\$HOME/.gemini/antigravity-cli/plugins/performance-agent-standards"
+    local global_dest_plugin="\$HOME/.gemini/config/plugins/performance-agent-standards"
     if [[ "$provider" == "gemini" ]]; then
       global_dest_plugin="\$HOME/.gemini/plugins/performance-agent-standards"
     fi

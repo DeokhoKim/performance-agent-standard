@@ -7,7 +7,7 @@ Def: Purpose → Generate comprehensive commit message for staged changes, then 
 
 Section: Invocation Parameters
 
-- `[language]`: Optional. Target language for the commit message. Defaults to Korean (한국어), or English if user context is English.
+- `[language]`: Optional. Target language for the commit message. Defaults to Korean (한국어).
 
 Section: Execution Flow
 
@@ -22,7 +22,7 @@ Step: 2. Context Collection:
 
 Step: 3. Commit Message Generation:
 - Format: Conventional Commits (`<type>(<scope>): <subject>` + body).
-- Language: Use `[language]` if specified, otherwise auto-detect (default Korean, English fallback).
+- Language: Use `[language]` if specified, otherwise default to Korean (한국어).
 - Subject: Max 50 chars, imperative mood, no trailing period.
 - Body: Wrapped at 72 chars, explain what && why.
 

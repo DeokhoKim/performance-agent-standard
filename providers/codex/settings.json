@@ -1,16 +1,5 @@
 {
   "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Write|Edit|Create",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "./scripts/enable-md-writing-rule.sh"
-          }
-        ]
-      }
-    ],
     "PostToolUse": [
       {
         "matcher": "Write|Edit|Create",

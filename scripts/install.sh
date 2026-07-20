@@ -247,27 +247,21 @@ install_extracted_files() {
 
         if [[ -f "$settings_file" ]]; then
           log_info "Merging hooks into existing global settings.json..."
-          jq --arg cmd1 "$dest_plugin/scripts/validate-markdown.sh" \
-             --arg cmd2 "$dest_plugin/scripts/validate-format.sh" '
+          jq --arg cmd2 "$dest_plugin/scripts/validate-format.sh" '
             # Clean duplicate hooks
             .hooks.PreToolUse = [
               .hooks.PreToolUse[]?
               | .hooks = [
                   .hooks[]?
-                  | select(.command != $cmd1 and .command != $cmd2)
+                  | select(.command != $cmd2 and .command != ($cmd2 | sub("validate-format"; "validate-markdown")) and .command != ($cmd2 | sub("validate-format"; "enable-md-writing-rule")))
                 ]
               | select(.hooks | length > 0)
-            ] + [{
-              "matcher": "Write|Edit|Create",
-              "hooks": [
-                { "type": "command", "command": $cmd1 }
-              ]
-            }] |
+            ] |
             .hooks.PostToolUse = [
               .hooks.PostToolUse[]?
               | .hooks = [
                   .hooks[]?
-                  | select(.command != $cmd1 and .command != $cmd2)
+                  | select(.command != $cmd2 and .command != ($cmd2 | sub("validate-format"; "validate-markdown")) and .command != ($cmd2 | sub("validate-format"; "enable-md-writing-rule")))
                 ]
               | select(.hooks | length > 0)
             ] + [{
@@ -341,26 +335,20 @@ install_extracted_files() {
 
         if [[ -f "$settings_file" ]]; then
           log_info "Merging hooks into existing global settings.json..."
-          jq --arg cmd1 "$dest_plugin/scripts/validate-markdown.sh" \
-             --arg cmd2 "$dest_plugin/scripts/validate-format.sh" '
+          jq --arg cmd2 "$dest_plugin/scripts/validate-format.sh" '
             .hooks.PreToolUse = [
               .hooks.PreToolUse[]?
               | .hooks = [
                   .hooks[]?
-                  | select(.command != $cmd1 and .command != $cmd2)
+                  | select(.command != $cmd2 and .command != ($cmd2 | sub("validate-format"; "validate-markdown")) and .command != ($cmd2 | sub("validate-format"; "enable-md-writing-rule")))
                 ]
               | select(.hooks | length > 0)
-            ] + [{
-              "matcher": "Write|Edit|Create",
-              "hooks": [
-                { "type": "command", "command": $cmd1 }
-              ]
-            }] |
+            ] |
             .hooks.PostToolUse = [
               .hooks.PostToolUse[]?
               | .hooks = [
                   .hooks[]?
-                  | select(.command != $cmd1 and .command != $cmd2)
+                  | select(.command != $cmd2 and .command != ($cmd2 | sub("validate-format"; "validate-markdown")) and .command != ($cmd2 | sub("validate-format"; "enable-md-writing-rule")))
                 ]
               | select(.hooks | length > 0)
             ] + [{

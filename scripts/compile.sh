@@ -39,12 +39,14 @@ mkdir -p "$DIST_DIR"
 #   $3: trigger_type (always, glob, none)
 #   $4: description (optional)
 #   $5: glob_patterns (optional, comma-separated)
+#   $6: provider (optional, e.g. antigravity, gemini, claude, codex)
 compile_rule() {
   local src="$1"
   local dest="$2"
   local trigger="${3:-none}"
   local desc="${4:-}"
   local globs="${5:-}"
+  local provider="${6:-}"
 
   local dest_dir
   dest_dir=$(dirname "$dest")
@@ -54,15 +56,35 @@ compile_rule() {
     # Clean copy without frontmatter
     cp "$src" "$dest"
   else
+    local fm_trigger=""
+    local fm_glob_key="globs"
+
+    case "$provider" in
+      antigravity)
+        if [[ "$trigger" == "always" ]]; then
+          fm_trigger="alwaysApply: true"
+        else
+          fm_trigger="alwaysApply: false"
+        fi
+        ;;
+      claude)
+        fm_glob_key="paths"
+        ;;
+      *)
+        fm_trigger="trigger: ${trigger}"
+        ;;
+    esac
+
     # Compile with YAML frontmatter trigger block
     {
       printf -- "---\n"
-      printf -- "trigger: %s\n" "$trigger"
+      if [[ -n "$fm_trigger" ]]; then
+        printf "%s\n" "$fm_trigger"
+      fi
       if [[ -n "$globs" ]]; then
-        printf -- "globs:\n"
+        printf "%s:\n" "$fm_glob_key"
         IFS=',' read -ra ADDR <<< "$globs"
         for glob in "${ADDR[@]}"; do
-          # Trim leading/trailing whitespace
           glob=$(printf "%s" "$glob" | xargs)
           printf -- "  - \"%s\"\n" "$glob"
         done
@@ -194,12 +216,10 @@ SHARED_RULES=(
 #   $1: provider (gemini, claude, codex)
 #   $2: core_dest_rel_path (e.g. rules/00-gemini-core.md, CLAUDE.md)
 #   $3: config_prefix (e.g. "" or ".claude/" or ".codex/")
-#   $4: force_trigger_none (1 or 0)
 compile_provider() {
   local provider="$1"
   local core_dest_rel="$2"
   local prefix="${3:-}"
-  local force_none="${4:-0}"
 
   # Dynamically map antigravity and gemini to use gemini source files
   local provider_src="$provider"
@@ -215,27 +235,58 @@ compile_provider() {
   # 1. Compile Core Rule
   local core_dest_path="${provider_dist}/${core_dest_rel}"
   mkdir -p "$(dirname "$core_dest_path")"
-  cat "${BASE_DIR}/providers/${provider_src}/rules/always-read.md" \
-      <(printf "\n") \
-      "${BASE_DIR}/providers/shared/rules/markdown-reading.md" \
-      > "$core_dest_path"
+  if [[ "$provider" == "antigravity" ]]; then
+    cat <(sed 's/^trigger: always/alwaysApply: true/' "${BASE_DIR}/providers/${provider_src}/rules/always-read.md") \
+        <(printf "\n") \
+        "${BASE_DIR}/providers/shared/rules/markdown-reading.md" \
+        > "$core_dest_path"
+  else
+    cat "${BASE_DIR}/providers/${provider_src}/rules/always-read.md" \
+        <(printf "\n") \
+        "${BASE_DIR}/providers/shared/rules/markdown-reading.md" \
+        > "$core_dest_path"
+  fi
 
   # 2. Compile Shared Rules
   local rules_dest="${prefix_dir}rules"
   mkdir -p "$rules_dest"
+  local ref_content=""
   for entry in "${SHARED_RULES[@]}"; do
     IFS='|' read -r order_prefix name trigger globs desc <<< "$entry"
+
     local final_trigger="$trigger"
-    if [[ "$force_none" -eq 1 ]]; then
+    if [[ "$provider" == "codex" ]]; then
       final_trigger="none"
+    elif [[ "$provider" == "claude" ]]; then
+      if [[ "$trigger" == "always" ]]; then
+        final_trigger="none"
+      fi
     fi
+
     compile_rule \
       "${BASE_DIR}/providers/shared/rules/${name}.md" \
       "${rules_dest}/${order_prefix}-${name}.md" \
       "$final_trigger" \
       "$desc" \
-      "$globs"
+      "$globs" \
+      "$provider"
+
+    if [[ "$provider" == "claude" || "$provider" == "codex" ]]; then
+      local rel_rule_path="${prefix}rules/${order_prefix}-${name}.md"
+      if [[ "$trigger" == "always" ]]; then
+        ref_content="${ref_content}- [${name^}](${rel_rule_path}) (Always Apply)\n"
+      elif [[ "$trigger" == "glob" ]]; then
+        ref_content="${ref_content}- [${name^}](${rel_rule_path}) (Paths: ${globs})\n"
+      fi
+    fi
   done
+
+  if [[ -n "$ref_content" ]]; then
+    {
+      printf "\n## Rule References\n"
+      printf "%b" "$ref_content"
+    } >> "$core_dest_path"
+  fi
 
   # 3. Copy Configuration Files
   if [[ "$provider" == "antigravity" || "$provider" == "gemini" ]]; then
@@ -275,9 +326,9 @@ compile_provider() {
 }
 
 # Run Compilation for all supported providers
-compile_provider "antigravity" "rules/00-gemini-core.md" "" 0
-compile_provider "gemini" "rules/00-gemini-core.md" "" 0
-compile_provider "claude" "CLAUDE.md" ".claude/" 1
-compile_provider "codex" "AGENTS.md" ".codex/" 1
+compile_provider "antigravity" "rules/00-gemini-core.md" ""
+compile_provider "gemini" "rules/00-gemini-core.md" ""
+compile_provider "claude" "CLAUDE.md" ".claude/"
+compile_provider "codex" "AGENTS.md" ".codex/"
 
 log_info "Compilation complete. Output generated in: ${DIST_DIR}"

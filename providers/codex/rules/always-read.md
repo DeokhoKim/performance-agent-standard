@@ -1,4 +1,4 @@
-# Codex Coding Guidelines
+# Codex Core Agent Standards
 
 Section: Codex Agent Behavior
 Req: Autocomplete & Code Optimization: Code in structures that improve prediction accuracy.

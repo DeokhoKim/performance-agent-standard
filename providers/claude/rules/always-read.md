@@ -1,4 +1,4 @@
-# Claude Code Coding Guidelines
+# Claude Core Agent Standards
 
 Section: Claude Agent Behavior
 Req: Context & Token Optimization: Minimize conversation size and context footprint.

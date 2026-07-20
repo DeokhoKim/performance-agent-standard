@@ -1,9 +1,9 @@
 ---
 trigger: always
-description: "Core coding guidelines and HDMD reading/translation rules for Gemini."
+description: "Core behavior guidelines and HDMD reading/translation rules for Gemini."
 ---
 
-# Gemini Core Coding Standards
+# Gemini Core Agent Standards
 
 Section: Gemini Agent Behavior
 Req: Execution & Task Efficiency: Maximize tool use and task delegation to achieve high-depth results in a single turn.

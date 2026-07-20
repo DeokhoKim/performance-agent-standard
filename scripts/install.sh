@@ -175,11 +175,11 @@ install_extracted_files() {
       # CLI registration
       [[ "$provider" == "antigravity" ]] && command -v agy &>/dev/null && {
         log_info "Registering plugin with Antigravity CLI (agy)..."
-        agy plugin install "$dest_plugin"
+        agy plugin install "$src_dir"
       }
       [[ "$provider" == "gemini" ]] && command -v gemini &>/dev/null && {
         log_info "Registering plugin with Legacy Gemini CLI..."
-        gemini plugin install "$dest_plugin"
+        gemini plugin install "$src_dir"
       }
       ;;
 

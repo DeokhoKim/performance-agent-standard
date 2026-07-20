@@ -298,7 +298,7 @@ compile_provider() {
     if [[ "$provider" == "gemini" ]]; then
       global_dest_plugin="\$HOME/.gemini/plugins/performance-agent-standards"
     fi
-    sed -i "s|\"./scripts/validate-markdown.sh\"|\"$global_dest_plugin/scripts/validate-markdown.sh\"|g" "${provider_dist}/hooks.json"
+    sed -i "s|\"./scripts/enable-md-writing-rule.sh\"|\"$global_dest_plugin/scripts/enable-md-writing-rule.sh\"|g" "${provider_dist}/hooks.json"
     sed -i "s|\"./scripts/validate-format.sh\"|\"$global_dest_plugin/scripts/validate-format.sh\"|g" "${provider_dist}/hooks.json"
   else
     cp "${BASE_DIR}/providers/${provider_src}/settings.json" "${prefix_dir}settings.json"
@@ -309,7 +309,7 @@ compile_provider() {
       global_dest_plugin="\$HOME/.codex/plugins/performance-agent-standards"
     fi
     if [[ -f "${prefix_dir}settings.json" ]]; then
-      sed -i "s|\"./scripts/validate-markdown.sh\"|\"$global_dest_plugin/scripts/validate-markdown.sh\"|g" "${prefix_dir}settings.json"
+      sed -i "s|\"./scripts/enable-md-writing-rule.sh\"|\"$global_dest_plugin/scripts/enable-md-writing-rule.sh\"|g" "${prefix_dir}settings.json"
       sed -i "s|\"./scripts/validate-format.sh\"|\"$global_dest_plugin/scripts/validate-format.sh\"|g" "${prefix_dir}settings.json"
     fi
   fi
@@ -318,7 +318,7 @@ compile_provider() {
   local scripts_dest="${provider_dist}/scripts"
   mkdir -p "$scripts_dest"
   cp "${BASE_DIR}/scripts/parse-hook-input.sh" "$scripts_dest/"
-  cp "${BASE_DIR}/scripts/validate-markdown.sh" "$scripts_dest/"
+  cp "${BASE_DIR}/scripts/enable-md-writing-rule.sh" "$scripts_dest/"
   cp "${BASE_DIR}/scripts/validate-format.sh" "$scripts_dest/"
 
   # 5. Compile Provider Skills

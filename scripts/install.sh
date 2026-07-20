@@ -250,6 +250,19 @@ install_extracted_files() {
           jq --arg cmd1 "$dest_plugin/scripts/validate-markdown.sh" \
              --arg cmd2 "$dest_plugin/scripts/validate-format.sh" '
             # Clean duplicate hooks
+            .hooks.PreToolUse = [
+              .hooks.PreToolUse[]?
+              | .hooks = [
+                  .hooks[]?
+                  | select(.command != $cmd1 and .command != $cmd2)
+                ]
+              | select(.hooks | length > 0)
+            ] + [{
+              "matcher": "Write|Edit|Create",
+              "hooks": [
+                { "type": "command", "command": $cmd1 }
+              ]
+            }] |
             .hooks.PostToolUse = [
               .hooks.PostToolUse[]?
               | .hooks = [
@@ -260,7 +273,6 @@ install_extracted_files() {
             ] + [{
               "matcher": "Write|Edit|Create",
               "hooks": [
-                { "type": "command", "command": $cmd1 },
                 { "type": "command", "command": $cmd2 }
               ]
             }]
@@ -331,6 +343,19 @@ install_extracted_files() {
           log_info "Merging hooks into existing global settings.json..."
           jq --arg cmd1 "$dest_plugin/scripts/validate-markdown.sh" \
              --arg cmd2 "$dest_plugin/scripts/validate-format.sh" '
+            .hooks.PreToolUse = [
+              .hooks.PreToolUse[]?
+              | .hooks = [
+                  .hooks[]?
+                  | select(.command != $cmd1 and .command != $cmd2)
+                ]
+              | select(.hooks | length > 0)
+            ] + [{
+              "matcher": "Write|Edit|Create",
+              "hooks": [
+                { "type": "command", "command": $cmd1 }
+              ]
+            }] |
             .hooks.PostToolUse = [
               .hooks.PostToolUse[]?
               | .hooks = [
@@ -341,7 +366,6 @@ install_extracted_files() {
             ] + [{
               "matcher": "Write|Edit|Create",
               "hooks": [
-                { "type": "command", "command": $cmd1 },
                 { "type": "command", "command": $cmd2 }
               ]
             }]

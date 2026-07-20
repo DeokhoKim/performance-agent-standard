@@ -1,13 +1,20 @@
 {
   "hooks": {
-    "PostToolUse": [
+    "PreToolUse": [
       {
         "matcher": "Write|Edit|Create",
         "hooks": [
           {
             "type": "command",
-            "command": "./scripts/validate-markdown.sh"
-          },
+            "command": "./scripts/enable-md-writing-rule.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|Create",
+        "hooks": [
           {
             "type": "command",
             "command": "./scripts/validate-format.sh"

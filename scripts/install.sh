@@ -121,7 +121,7 @@ detect_providers() {
 get_dest_dir() {
   local provider="$1"
   case "$provider" in
-    antigravity) echo "$HOME/.gemini/antigravity-cli/plugins/performance-agent-standards" ;;
+    antigravity) echo "$HOME/.gemini/config/plugins/performance-agent-standards" ;;
     gemini)      echo "$HOME/.gemini/plugins/performance-agent-standards" ;;
     claude)      echo "$HOME/.claude/plugins/performance-agent-standards" ;;
     codex)       echo "$HOME/.codex/plugins/performance-agent-standards" ;;

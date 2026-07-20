@@ -30,7 +30,7 @@ curl -sSfL https://raw.githubusercontent.com/DeokhoKim/performance-agent-standar
 
 #### Option 2: Pre-packaged Zip Releases
 Alternatively, you can download a pre-packaged `.zip` release from the GitHub Releases page and extract it directly into your agent's isolated plugin directory:
-- **Gemini**: Extract to `~/.gemini/antigravity-cli/plugins/performance-agent-standards/`
+- **Gemini**: Extract to `~/.gemini/config/plugins/performance-agent-standards/`
 - **Claude**: Extract to `~/.claude/plugins/performance-agent-standards/`
 - **Codex**: Extract to `~/.codex/plugins/performance-agent-standards/`
 

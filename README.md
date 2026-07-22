@@ -38,10 +38,10 @@ Alternatively, you can download a pre-packaged `.zip` release from the GitHub Re
 
 This plugin registers post-tool hooks that run dynamically in your workspace immediately after any file-writing or editing tool completes execution.
 
-*   **`validate-markdown.sh`**:
-    *   **Role**: Validates that all newly created or modified Markdown (`.md`) files conform to High-Density Markdown (HDMD) guidelines.
-    *   **Behavior**: If inline topic tags (e.g., `#standards`, `#typing`) are used in a document, it enforces that the file must start with a YAML frontmatter block containing a `topics:` index key. It rejects the edit (exits 1) if this index is missing.
-    *   **Integration**: Automatically registered under Gemini's `hooks.json` and Claude Code's `settings.json` for file edit events (`Write`, `Edit`, `write_to_file`, etc.).
+*   **`validate-format.sh`**:
+    *   **Role**: Runs `prek` (pre-commit) format and quality checks on modified files after file editing tool executions.
+    *   **Behavior**: Resolves workspace repository root, checks for `prek` in the local `.venv`, and runs `prek run --files <file>` (or all files if unspecified), truncating log output to save token consumption.
+    *   **Integration**: Automatically registered under Gemini's `hooks.json`, Claude Code's `settings.json`, and Codex's `settings.json` for post-tool file modification events.
 
 ## Developer Guide
 
@@ -83,7 +83,7 @@ performance-agent-standards/
 ├── scripts/                    # Utility and hook scripts
 │   ├── compile.sh              # Merges shared rules & configs with provider-specific ones
 │   ├── install.sh              # Universal installer and update script
-│   └── validate-markdown.sh    # Tool/Git hook script to validate markdown syntax
+│   └── validate-format.sh      # Post-tool hook script running prek format checks
 ```
 
 ### Compilation & Manual Packaging

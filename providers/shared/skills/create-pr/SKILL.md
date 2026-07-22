@@ -26,12 +26,12 @@ Step: 2. Branch Checkout (if detached):
 Step: 3. Remote Push:
 - Rule: Execute `git push -u origin <CURRENT_BRANCH>`.
 
-Step: 4. PR Message Generation:
-- Read `COMMITS_FILE` and `DIFF_FILE` (paths provided by `pre-pr-check.sh` output). Do NOT run any git commands to re-collect this data.
-- Evaluate whether commit messages are comprehensive (subject + explanatory body).
-- Rule: If comprehensive → derive PR title and description from commits only.
-- Rule: If NOT comprehensive or `IS_TRIVIAL=false` → derive PR title and description from `DIFF_FILE`.
-- Language: Generate in `[language]` (default Korean).
+Step: 4. PR Message Generation & Context Isolation:
+- Rule: Do NOT read raw `COMMITS_FILE` or `DIFF_FILE` directly into the main orchestrator context.
+- Delegate PR title & description generation to `diff-analyzer` subagent:
+  - Input: `commits_file=COMMITS_FILE`, `diff_file=DIFF_FILE`, `analysis_mode="pr_description"`, `strategy="auto"`.
+  - Language: `[language]` (default Korean).
+- `diff-analyzer` handles automatic quality evaluation (Fast Path via commits if comprehensive; Deep Path via diff if trivial).
 
 Step: 5. PR Creation:
 - Rule: Execute `gh pr create --base <TARGET_BRANCH>` with the generated title and body.

@@ -320,6 +320,14 @@ compile_provider() {
 
   # 5. Compile Provider Skills
   compile_provider_skills "$provider" "${prefix_dir}skills"
+
+  # 6. Copy Shared Agents
+  local agents_src="${BASE_DIR}/providers/shared/agents"
+  if [[ -d "$agents_src" ]]; then
+    local agents_dest="${prefix_dir}agents"
+    mkdir -p "$agents_dest"
+    cp -r "$agents_src"/* "$agents_dest/"
+  fi
 }
 
 # Run Compilation for all supported providers

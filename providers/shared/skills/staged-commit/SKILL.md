@@ -16,16 +16,13 @@ Step: 1. Pre-flight Validation:
 - Rule: Agent MUST NOT perform manual check commands (e.g., `git status`, `git diff`). Rely entirely on `pre-commit-check.sh`.
 - Rule: If `pre-commit-check.sh` fails (exit status > 0) → display output, suggest action, and stop execution immediately.
 
-Step: 2. Context Collection:
-- Rule: Use the output of `pre-commit-check.sh` (from Step 1) as the sole diff context. Do NOT run any additional git commands.
-- Rule: `git commit` always applies staged changes to the current HEAD regardless of branch state (attached or detached). No branch comparison is needed or performed.
-
-Step: 3. Commit Message Generation:
+Step: 2. Diff Analysis & Context Isolation:
+- Rule: Do NOT read raw diff content into the main orchestrator context.
+- Delegate diff processing to the `diff-analyzer` subagent:
+  - Input: `diff_file` (from `pre-commit-check.sh`), `commits_file=null`, `analysis_mode="commit_message"`.
+  - Language: `[language]` (default Korean).
 - Format: Conventional Commits (`<type>(<scope>): <subject>` + body).
-- Language: Use `[language]` if specified, otherwise default to Korean (한국어).
-- Subject: Max 50 chars, imperative mood, no trailing period.
-- Body: Wrapped at 72 chars, explain what && why.
 
-Step: 4. Execution:
-- Rule: Execute `git commit -m "<message>"` immediately. No user confirmation required.
+Step: 3. Execution:
+- Rule: Execute `git commit -m "<message>"` immediately using the commit message returned by `diff-analyzer`. No user confirmation required.
   - Exception: If the commit fails due to pre-commit hook fixes, the agent may run `git add` ONLY on already-staged files to update their index state, then retry the commit once. No other files can be added.

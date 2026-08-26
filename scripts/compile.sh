@@ -196,21 +196,22 @@ compile_provider_skills() {
 #   4x: Native & Compiled System Languages
 #   5x: Interpreted & Scripting Languages
 SHARED_RULES=(
-  "10|karpathy-guidelines|always||Core coding instincts and developer workflow principles."
-  "11|workspace-hygiene|always||Active workspace hygiene and speculative reading restrictions."
-  "12|inline-execution|always||Agent inline command and execution standards."
-  "20|markdown-writing|glob|**/*.md|Guidelines and standards for writing High-Density Markdown (HDMD)."
-  "30|lang-standard-common|glob|*.rs, *.cpp, *.cc, *.c, *.hpp, *.h, *.sh, *.bash, *.py|Common language code quality and maintainability standards."
-  "40|lang-standard-native|glob|*.rs, *.cpp, *.cc, *.c, *.hpp, *.h|Native language performance standards."
-  "41|lang-standard-rust|glob|*.rs|Rust safety and collection idioms standards."
-  "50|lang-standard-bash|glob|*.sh, *.bash|Bash scripting standards."
-  "51|lang-standard-python|glob|*.py|Python standards."
+  "10|karpathy-guidelines|always||Read before writing, refactoring, or reviewing code. Enforces simplicity-first principles, surgical modifications, explicit assumptions, and goal-driven verification."
+  "11|workspace-hygiene|always||Read when planning multi-file tasks, navigating files, or managing context. Enforces pre-execution mapping, batched surgical edits, subagent context isolation, anti-speculation reading, and rule precedence."
+  "12|inline-execution|always||Read before executing shell commands or running dynamic inline scripts. Enforces shell-first pipeline parallelism, POSIX utility standards, and Python fallback constraints."
+  "13|development-standards|always||Read before building, testing, running, or resolving toolchains. Enforces local environment primacy (Local > System > Assumption), virtualenv priority, native compiler overrides, and README single-read fallback."
+  "20|markdown-writing|glob|**/*.md|Read when creating, editing, or refactoring Markdown files or documentation. Enforces token efficiency, zero context-loss preservation, structural formatting, and semantic tag conventions."
+  "30|lang-standard-common|glob|*.rs, *.cpp, *.cc, *.c, *.hpp, *.h, *.sh, *.bash, *.py|Read when implementing or refactoring source code across any language. Enforces pragmatic SOLID design, dependency injection, scoped resource cleanup (RAII), zero-copy memory patterns, and pipeline concurrency."
+  "40|lang-standard-native|glob|*.rs, *.cpp, *.cc, *.c, *.hpp, *.h|Read when writing or modifying compiled systems code (C, C++). Enforces in-place algorithms, collection capacity pre-allocation, zero-copy buffer views, and RAII resource destruction."
+  "41|lang-standard-rust|glob|*.rs|Read when writing, reviewing, or optimizing Rust source code (*.rs). Enforces panic-safe arithmetic, zero-cost iterator pipelines, allocation-free borrowing, channel concurrency, and Drop cleanup."
+  "50|lang-standard-bash|glob|*.sh, *.bash|Read when creating, modifying, or reviewing Bash shell scripts (*.sh, *.bash). Enforces strict error handling (set -euo pipefail), pipeline streaming, POSIX formatted logging with scoped ANSI colors, and trap cleanup."
+  "51|lang-standard-python|glob|*.py|Read when writing, reviewing, or optimizing Python source code (*.py). Enforces modern built-in type hints, immutable dataclasses, match/case pattern matching, generator pipelines, context managers, and vectorized numerical operations."
 )
 
 # Provider Compiler Function (SOLID: Open-Closed Principle for adding new agent platforms)
 # Arguments:
-#   $1: provider (gemini, claude, codex)
-#   $2: core_dest_rel_path (e.g. rules/00-gemini-core.md, CLAUDE.md)
+#   $1: provider (antigravity, gemini, claude, codex)
+#   $2: core_dest_rel_path (e.g. rules/GEMINI.md, CLAUDE.md, AGENTS.md)
 #   $3: config_prefix (e.g. "" or ".claude/" or ".codex/")
 compile_provider() {
   local provider="$1"
@@ -229,20 +230,10 @@ compile_provider() {
   # 1. Compile Core Rule
   local core_dest_path="${provider_dist}/${core_dest_rel}"
   mkdir -p "$(dirname "$core_dest_path")"
-  case "$provider" in
-    antigravity)
-      cat <(sed 's/^trigger: always/alwaysApply: true/' "${BASE_DIR}/providers/${provider_src}/rules/always-read.md") \
-          <(printf "\n") \
-          "${BASE_DIR}/providers/shared/rules/markdown-reading.md" \
-          > "$core_dest_path"
-      ;;
-    *)
-      cat "${BASE_DIR}/providers/${provider_src}/rules/always-read.md" \
-          <(printf "\n") \
-          "${BASE_DIR}/providers/shared/rules/markdown-reading.md" \
-          > "$core_dest_path"
-      ;;
-  esac
+  cat "${BASE_DIR}/providers/${provider_src}/rules/always-read.md" \
+      <(printf "\n") \
+      "${BASE_DIR}/providers/shared/rules/markdown-reading.md" \
+      > "$core_dest_path"
 
   # 2. Compile Shared Rules
   local rules_dest="${prefix_dir}rules"
@@ -269,17 +260,20 @@ compile_provider() {
       "$globs" \
       "$provider"
 
-    case "$provider" in
-      claude|codex)
-        local rel_rule_path="${prefix}rules/${order_prefix}-${name}.md"
-        case "$trigger" in
-          always)
+    local rel_rule_path="${prefix}rules/${order_prefix}-${name}.md"
+    case "$trigger" in
+      always)
+        case "$provider" in
+          antigravity|gemini|claude)
+            ref_content="${ref_content}- @[${rel_rule_path}]\n"
+            ;;
+          *)
             ref_content="${ref_content}- [${name^}](${rel_rule_path}) (Always Apply)\n"
             ;;
-          glob)
-            ref_content="${ref_content}- [${name^}](${rel_rule_path}) (Paths: ${globs})\n"
-            ;;
         esac
+        ;;
+      glob)
+        ref_content="${ref_content}- [${name^}](${rel_rule_path}) (Paths: ${globs})\n"
         ;;
     esac
   done
@@ -320,8 +314,8 @@ compile_provider() {
 }
 
 # Run Compilation for all supported providers
-compile_provider "antigravity" "rules/00-gemini-core.md" ""
-compile_provider "gemini" "rules/00-gemini-core.md" ""
+compile_provider "antigravity" "rules/GEMINI.md" ""
+compile_provider "gemini" "rules/GEMINI.md" ""
 compile_provider "claude" "CLAUDE.md" ".claude/"
 compile_provider "codex" "AGENTS.md" ".codex/"
 

@@ -25,7 +25,7 @@ Step: 3. Commit Message Generation:
 - Format: Conventional Commits (`<type>(<scope>): <subject>` + body).
 - Language: Use `[language]` if specified, otherwise default to Korean (한국어).
 - Subject: Max 50 chars, imperative mood, no trailing period.
-- Body: Wrapped at 72 chars. Follow this structured format:
+- Body: Wrapped at 72 chars. Prioritize any workspace-specific or injected format if it exists; otherwise, follow this structured format:
   1. **Summary**: Provide a full-sentence prose overview explaining what this commit means and its overall impact before detailing the changes.
   2. **Detailed Changes**: Provide a bulleted list of the specific code changes. MUST use an itemized, concise fragment format (e.g., bulleted short phrases, noun-endings).
   3. **Affected Areas**: Note which features, modules, or flows will be affected by these changes.

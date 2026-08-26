@@ -52,46 +52,42 @@ compile_rule() {
   dest_dir=$(dirname "$dest")
   mkdir -p "$dest_dir"
 
-  if [[ "$trigger" == "none" ]]; then
-    # Clean copy without frontmatter
-    cp "$src" "$dest"
-  else
-    local fm_trigger=""
-    local fm_glob_key="globs"
+  [[ "$trigger" == "none" ]] && { cp "$src" "$dest"; return 0; }
 
-    case "$provider" in
-      antigravity)
-        if [[ "$trigger" == "always" ]]; then
-          fm_trigger="alwaysApply: true"
-        else
-          fm_trigger="alwaysApply: false"
-        fi
-        ;;
-      claude)
-        fm_glob_key="paths"
-        ;;
-      *)
-        fm_trigger="trigger: ${trigger}"
-        ;;
-    esac
+  local fm_trigger=""
+  local fm_glob_key="globs"
 
-    # Compile with YAML frontmatter trigger block
-    {
-      printf -- "---\n"
-        [[ -n "$fm_trigger" ]] && printf "%s\n" "$fm_trigger"
-      if [[ -n "$globs" ]]; then
-        printf "%s:\n" "$fm_glob_key"
-        IFS=',' read -ra ADDR <<< "$globs"
-        for glob in "${ADDR[@]}"; do
-          glob=$(printf "%s" "$glob" | xargs)
-          printf -- "  - \"%s\"\n" "$glob"
-        done
-      fi
-        [[ -n "$desc" ]] && printf -- "description: \"%s\"\n" "$desc"
-      printf -- "---\n\n"
-      cat "$src"
-    } > "$dest"
-  fi
+  case "$provider" in
+    antigravity)
+      case "$trigger" in
+        always) fm_trigger="alwaysApply: true" ;;
+        *)      fm_trigger="alwaysApply: false" ;;
+      esac
+      ;;
+    claude)
+      fm_glob_key="paths"
+      ;;
+    *)
+      fm_trigger="trigger: ${trigger}"
+      ;;
+  esac
+
+  # Compile with YAML frontmatter trigger block
+  {
+    printf -- "---\n"
+    [[ -n "$fm_trigger" ]] && printf "%s\n" "$fm_trigger"
+    if [[ -n "$globs" ]]; then
+      printf "%s:\n" "$fm_glob_key"
+      IFS=',' read -ra ADDR <<< "$globs"
+      for glob in "${ADDR[@]}"; do
+        glob=$(printf "%s" "$glob" | xargs)
+        printf -- "  - \"%s\"\n" "$glob"
+      done
+    fi
+    [[ -n "$desc" ]] && printf -- "description: \"%s\"\n" "$desc"
+    printf -- "---\n\n"
+    cat "$src"
+  } > "$dest"
 }
 
 # Skill Compiler Function (SOLID: Single Responsibility)
@@ -192,16 +188,23 @@ compile_provider_skills() {
 
 # Declarative Rule Registry (SOLID: Open-Closed Principle for adding new rules)
 # Format: "ordering_prefix|rule_name|trigger_type|globs|description"
+# Numbering uses 2-digit hexadecimal where the first digit represents the category:
+#   0x: Platform Core / Bootstrap
+#   1x: Agent Core Instincts & Workflow Directives
+#   2x: Document & Writing Standards
+#   3x: Common / Polyglot Language Standards
+#   4x: Native & Compiled System Languages
+#   5x: Interpreted & Scripting Languages
 SHARED_RULES=(
-  "01|karpathy-guidelines|always||Core coding instincts and developer workflow principles."
-  "02|workspace-hygiene|always||Active workspace hygiene and speculative reading restrictions."
-  "03|lang-standard-common|glob|*.rs, *.cpp, *.cc, *.c, *.hpp, *.h, *.sh, *.bash, *.py|Common language code quality and maintainability standards."
-  "04|lang-standard-native|glob|*.rs, *.cpp, *.cc, *.c, *.hpp, *.h|Native language performance standards."
-  "05|lang-standard-rust|glob|*.rs|Rust safety and collection idioms standards."
-  "06|lang-standard-bash|glob|*.sh, *.bash|Bash scripting standards."
-  "07|markdown-writing|glob|**/*.md|Guidelines and standards for writing High-Density Markdown (HDMD)."
-  "08|inline-execution|always||Agent inline command and execution standards."
-  "09|lang-standard-python|glob|*.py|Python standards."
+  "10|karpathy-guidelines|always||Core coding instincts and developer workflow principles."
+  "11|workspace-hygiene|always||Active workspace hygiene and speculative reading restrictions."
+  "12|inline-execution|always||Agent inline command and execution standards."
+  "20|markdown-writing|glob|**/*.md|Guidelines and standards for writing High-Density Markdown (HDMD)."
+  "30|lang-standard-common|glob|*.rs, *.cpp, *.cc, *.c, *.hpp, *.h, *.sh, *.bash, *.py|Common language code quality and maintainability standards."
+  "40|lang-standard-native|glob|*.rs, *.cpp, *.cc, *.c, *.hpp, *.h|Native language performance standards."
+  "41|lang-standard-rust|glob|*.rs|Rust safety and collection idioms standards."
+  "50|lang-standard-bash|glob|*.sh, *.bash|Bash scripting standards."
+  "51|lang-standard-python|glob|*.py|Python standards."
 )
 
 # Provider Compiler Function (SOLID: Open-Closed Principle for adding new agent platforms)
@@ -226,17 +229,20 @@ compile_provider() {
   # 1. Compile Core Rule
   local core_dest_path="${provider_dist}/${core_dest_rel}"
   mkdir -p "$(dirname "$core_dest_path")"
-  if [[ "$provider" == "antigravity" ]]; then
-    cat <(sed 's/^trigger: always/alwaysApply: true/' "${BASE_DIR}/providers/${provider_src}/rules/always-read.md") \
-        <(printf "\n") \
-        "${BASE_DIR}/providers/shared/rules/markdown-reading.md" \
-        > "$core_dest_path"
-  else
-    cat "${BASE_DIR}/providers/${provider_src}/rules/always-read.md" \
-        <(printf "\n") \
-        "${BASE_DIR}/providers/shared/rules/markdown-reading.md" \
-        > "$core_dest_path"
-  fi
+  case "$provider" in
+    antigravity)
+      cat <(sed 's/^trigger: always/alwaysApply: true/' "${BASE_DIR}/providers/${provider_src}/rules/always-read.md") \
+          <(printf "\n") \
+          "${BASE_DIR}/providers/shared/rules/markdown-reading.md" \
+          > "$core_dest_path"
+      ;;
+    *)
+      cat "${BASE_DIR}/providers/${provider_src}/rules/always-read.md" \
+          <(printf "\n") \
+          "${BASE_DIR}/providers/shared/rules/markdown-reading.md" \
+          > "$core_dest_path"
+      ;;
+  esac
 
   # 2. Compile Shared Rules
   local rules_dest="${prefix_dir}rules"
@@ -246,11 +252,14 @@ compile_provider() {
     IFS='|' read -r order_prefix name trigger globs desc <<< "$entry"
 
     local final_trigger="$trigger"
-    if [[ "$provider" == "codex" ]]; then
-      final_trigger="none"
-    elif [[ "$provider" == "claude" ]]; then
+    case "$provider" in
+      codex)
+        final_trigger="none"
+        ;;
+      claude)
         [[ "$trigger" == "always" ]] && final_trigger="none"
-    fi
+        ;;
+    esac
 
     compile_rule \
       "${BASE_DIR}/providers/shared/rules/${name}.md" \
@@ -260,40 +269,46 @@ compile_provider() {
       "$globs" \
       "$provider"
 
-    if [[ "$provider" == "claude" || "$provider" == "codex" ]]; then
-      local rel_rule_path="${prefix}rules/${order_prefix}-${name}.md"
-      if [[ "$trigger" == "always" ]]; then
-        ref_content="${ref_content}- [${name^}](${rel_rule_path}) (Always Apply)\n"
-      elif [[ "$trigger" == "glob" ]]; then
-        ref_content="${ref_content}- [${name^}](${rel_rule_path}) (Paths: ${globs})\n"
-      fi
-    fi
+    case "$provider" in
+      claude|codex)
+        local rel_rule_path="${prefix}rules/${order_prefix}-${name}.md"
+        case "$trigger" in
+          always)
+            ref_content="${ref_content}- [${name^}](${rel_rule_path}) (Always Apply)\n"
+            ;;
+          glob)
+            ref_content="${ref_content}- [${name^}](${rel_rule_path}) (Paths: ${globs})\n"
+            ;;
+        esac
+        ;;
+    esac
   done
 
-  if [[ -n "$ref_content" ]]; then
-    {
-      printf "\n## Rule References\n"
-      printf "%b" "$ref_content"
-    } >> "$core_dest_path"
-  fi
+  [[ -n "$ref_content" ]] && {
+    printf "\n## Rule References\n"
+    printf "%b" "$ref_content"
+  } >> "$core_dest_path"
 
   # 3. Copy Configuration Files
-  if [[ "$provider" == "antigravity" || "$provider" == "gemini" ]]; then
-    cp "${BASE_DIR}/providers/gemini/hooks.json" "${provider_dist}/hooks.json"
-    sed "s/__VERSION__/${VERSION}/g" "${BASE_DIR}/providers/gemini/plugin.json" > "${provider_dist}/plugin.json"
+  case "$provider" in
+    antigravity|gemini)
+      cp "${BASE_DIR}/providers/gemini/hooks.json" "${provider_dist}/hooks.json"
+      sed "s/__VERSION__/${VERSION}/g" "${BASE_DIR}/providers/gemini/plugin.json" > "${provider_dist}/plugin.json"
 
-    # Replace relative path with absolute/home-relative path in hooks.json for pre-built/extracted plugins
-    local global_dest_plugin="\$HOME/.gemini/config/plugins/performance-agent-standards"
+      # Replace relative path with absolute/home-relative path in hooks.json for pre-built/extracted plugins
+      local global_dest_plugin="\$HOME/.gemini/config/plugins/performance-agent-standards"
       [[ "$provider" == "gemini" ]] && global_dest_plugin="\$HOME/.gemini/plugins/performance-agent-standards"
-    sed -i "s|\"./scripts/hooks/|\"$global_dest_plugin/scripts/hooks/|g" "${provider_dist}/hooks.json"
-  else
-    cp "${BASE_DIR}/providers/${provider_src}/settings.json" "${prefix_dir}settings.json"
+      sed -i "s|\"./scripts/hooks/|\"$global_dest_plugin/scripts/hooks/|g" "${provider_dist}/hooks.json"
+      ;;
+    claude|codex)
+      cp "${BASE_DIR}/providers/${provider_src}/settings.json" "${prefix_dir}settings.json"
 
-    # Replace relative path with absolute/home-relative path in settings.json for pre-built/extracted plugins for Claude and Codex
-    local global_dest_plugin="\$HOME/.claude/plugins/performance-agent-standards"
+      # Replace relative path with absolute/home-relative path in settings.json for pre-built/extracted plugins for Claude and Codex
+      local global_dest_plugin="\$HOME/.claude/plugins/performance-agent-standards"
       [[ "$provider" == "codex" ]] && global_dest_plugin="\$HOME/.codex/plugins/performance-agent-standards"
       [[ -f "${prefix_dir}settings.json" ]] && sed -i "s|\"./scripts/hooks/|\"$global_dest_plugin/scripts/hooks/|g" "${prefix_dir}settings.json"
-  fi
+      ;;
+  esac
 
   # 4. Copy Common Scripts
   local scripts_dest="${provider_dist}/scripts"

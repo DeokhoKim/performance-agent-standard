@@ -98,9 +98,7 @@ detect_providers() {
   fi
   if command -v gemini &>/dev/null || [[ -d "$HOME/.gemini/plugins" ]]; then
     # Only detect legacy gemini if modern agy is not installed to avoid double gemini config
-    if [[ ! -d "$HOME/.gemini/antigravity-cli" ]]; then
-      detected+=("gemini")
-    fi
+      [[ ! -d "$HOME/.gemini/antigravity-cli" ]] && detected+=("gemini")
   fi
   if command -v claude &>/dev/null || [[ -d "$HOME/.claude" ]]; then
     detected+=("claude")
@@ -110,9 +108,7 @@ detect_providers() {
   fi
 
   # Fallback to antigravity if nothing is detected
-  if [[ ${#detected[@]} -eq 0 ]]; then
-    detected+=("antigravity")
-  fi
+    [[ ${#detected[@]} -eq 0 ]] && detected+=("antigravity")
 
   echo "${detected[@]}"
 }
@@ -247,29 +243,13 @@ install_extracted_files() {
 
         if [[ -f "$settings_file" ]]; then
           log_info "Merging hooks into existing global settings.json..."
-          jq --arg cmd2 "$dest_plugin/scripts/validate-format.sh" '
-            # Clean duplicate hooks
+          jq --slurpfile new_settings "$src_dir/.claude/settings.json" --arg prefix "$dest_plugin/scripts/" '
             .hooks.PreToolUse = [
-              .hooks.PreToolUse[]?
-              | .hooks = [
-                  .hooks[]?
-                  | select(.command != $cmd2 and .command != ($cmd2 | sub("validate-format"; "validate-markdown")) and .command != ($cmd2 | sub("validate-format"; "enable-md-writing-rule")))
-                ]
-              | select(.hooks | length > 0)
-            ] |
+              (.hooks.PreToolUse[]? | .hooks = [ .hooks[]? | select( ((.command | type == "string") and (.command | startswith($prefix))) | not ) ] | select(.hooks | length > 0) )
+            ] + ($new_settings[0].hooks.PreToolUse // []) |
             .hooks.PostToolUse = [
-              .hooks.PostToolUse[]?
-              | .hooks = [
-                  .hooks[]?
-                  | select(.command != $cmd2 and .command != ($cmd2 | sub("validate-format"; "validate-markdown")) and .command != ($cmd2 | sub("validate-format"; "enable-md-writing-rule")))
-                ]
-              | select(.hooks | length > 0)
-            ] + [{
-              "matcher": "Write|Edit|Create",
-              "hooks": [
-                { "type": "command", "command": $cmd2 }
-              ]
-            }]
+              (.hooks.PostToolUse[]? | .hooks = [ .hooks[]? | select( ((.command | type == "string") and (.command | startswith($prefix))) | not ) ] | select(.hooks | length > 0) )
+            ] + ($new_settings[0].hooks.PostToolUse // [])
           ' "$settings_file" > "$temp_json"
           mv "$temp_json" "$settings_file"
         else
@@ -335,28 +315,13 @@ install_extracted_files() {
 
         if [[ -f "$settings_file" ]]; then
           log_info "Merging hooks into existing global settings.json..."
-          jq --arg cmd2 "$dest_plugin/scripts/validate-format.sh" '
+          jq --slurpfile new_settings "$src_dir/.codex/settings.json" --arg prefix "$dest_plugin/scripts/" '
             .hooks.PreToolUse = [
-              .hooks.PreToolUse[]?
-              | .hooks = [
-                  .hooks[]?
-                  | select(.command != $cmd2 and .command != ($cmd2 | sub("validate-format"; "validate-markdown")) and .command != ($cmd2 | sub("validate-format"; "enable-md-writing-rule")))
-                ]
-              | select(.hooks | length > 0)
-            ] |
+              (.hooks.PreToolUse[]? | .hooks = [ .hooks[]? | select( ((.command | type == "string") and (.command | startswith($prefix))) | not ) ] | select(.hooks | length > 0) )
+            ] + ($new_settings[0].hooks.PreToolUse // []) |
             .hooks.PostToolUse = [
-              .hooks.PostToolUse[]?
-              | .hooks = [
-                  .hooks[]?
-                  | select(.command != $cmd2 and .command != ($cmd2 | sub("validate-format"; "validate-markdown")) and .command != ($cmd2 | sub("validate-format"; "enable-md-writing-rule")))
-                ]
-              | select(.hooks | length > 0)
-            ] + [{
-              "matcher": "Write|Edit|Create",
-              "hooks": [
-                { "type": "command", "command": $cmd2 }
-              ]
-            }]
+              (.hooks.PostToolUse[]? | .hooks = [ .hooks[]? | select( ((.command | type == "string") and (.command | startswith($prefix))) | not ) ] | select(.hooks | length > 0) )
+            ] + ($new_settings[0].hooks.PostToolUse // [])
           ' "$settings_file" > "$temp_json"
           mv "$temp_json" "$settings_file"
         else

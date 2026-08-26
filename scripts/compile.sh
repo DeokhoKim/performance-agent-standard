@@ -78,9 +78,7 @@ compile_rule() {
     # Compile with YAML frontmatter trigger block
     {
       printf -- "---\n"
-      if [[ -n "$fm_trigger" ]]; then
-        printf "%s\n" "$fm_trigger"
-      fi
+        [[ -n "$fm_trigger" ]] && printf "%s\n" "$fm_trigger"
       if [[ -n "$globs" ]]; then
         printf "%s:\n" "$fm_glob_key"
         IFS=',' read -ra ADDR <<< "$globs"
@@ -89,9 +87,7 @@ compile_rule() {
           printf -- "  - \"%s\"\n" "$glob"
         done
       fi
-      if [[ -n "$desc" ]]; then
-        printf -- "description: \"%s\"\n" "$desc"
-      fi
+        [[ -n "$desc" ]] && printf -- "description: \"%s\"\n" "$desc"
       printf -- "---\n\n"
       cat "$src"
     } > "$dest"
@@ -138,12 +134,8 @@ compile_provider_skills() {
       # 3. Assemble and write the compiled SKILL.md
       {
         printf -- "---\n"
-        if [[ -f "$base_fm" ]]; then
-          cat "$base_fm"
-        fi
-        if [[ -f "$provider_fm" ]]; then
-          cat "$provider_fm"
-        fi
+          [[ -f "$base_fm" ]] && cat "$base_fm"
+          [[ -f "$provider_fm" ]] && cat "$provider_fm"
         if [[ ! -f "$base_fm" && ! -f "$provider_fm" ]]; then
           # Fallback to extracting frontmatter from SKILL.md if no YAML files exist
           awk '
@@ -203,12 +195,13 @@ compile_provider_skills() {
 SHARED_RULES=(
   "01|karpathy-guidelines|always||Core coding instincts and developer workflow principles."
   "02|workspace-hygiene|always||Active workspace hygiene and speculative reading restrictions."
-  "03|lang-standard-common|glob|*.rs, *.cpp, *.cc, *.c, *.hpp, *.h, *.sh, *.bash|Common language code quality and maintainability standards."
+  "03|lang-standard-common|glob|*.rs, *.cpp, *.cc, *.c, *.hpp, *.h, *.sh, *.bash, *.py|Common language code quality and maintainability standards."
   "04|lang-standard-native|glob|*.rs, *.cpp, *.cc, *.c, *.hpp, *.h|Native language performance standards."
   "05|lang-standard-rust|glob|*.rs|Rust safety and collection idioms standards."
   "06|lang-standard-bash|glob|*.sh, *.bash|Bash scripting standards."
   "07|markdown-writing|glob|**/*.md|Guidelines and standards for writing High-Density Markdown (HDMD)."
   "08|inline-execution|always||Agent inline command and execution standards."
+  "09|lang-standard-python|glob|*.py|Python standards."
 )
 
 # Provider Compiler Function (SOLID: Open-Closed Principle for adding new agent platforms)
@@ -223,9 +216,7 @@ compile_provider() {
 
   # Dynamically map antigravity and gemini to use gemini source files
   local provider_src="$provider"
-  if [[ "$provider" == "antigravity" || "$provider" == "gemini" ]]; then
-    provider_src="gemini"
-  fi
+    [[ "$provider" == "antigravity" || "$provider" == "gemini" ]] && provider_src="gemini"
 
   log_info "Compiling ${provider^}..."
 
@@ -258,9 +249,7 @@ compile_provider() {
     if [[ "$provider" == "codex" ]]; then
       final_trigger="none"
     elif [[ "$provider" == "claude" ]]; then
-      if [[ "$trigger" == "always" ]]; then
-        final_trigger="none"
-      fi
+        [[ "$trigger" == "always" ]] && final_trigger="none"
     fi
 
     compile_rule \
@@ -295,28 +284,21 @@ compile_provider() {
 
     # Replace relative path with absolute/home-relative path in hooks.json for pre-built/extracted plugins
     local global_dest_plugin="\$HOME/.gemini/config/plugins/performance-agent-standards"
-    if [[ "$provider" == "gemini" ]]; then
-      global_dest_plugin="\$HOME/.gemini/plugins/performance-agent-standards"
-    fi
-    sed -i "s|\"./scripts/validate-format.sh\"|\"$global_dest_plugin/scripts/validate-format.sh\"|g" "${provider_dist}/hooks.json"
+      [[ "$provider" == "gemini" ]] && global_dest_plugin="\$HOME/.gemini/plugins/performance-agent-standards"
+    sed -i "s|\"./scripts/hooks/|\"$global_dest_plugin/scripts/hooks/|g" "${provider_dist}/hooks.json"
   else
     cp "${BASE_DIR}/providers/${provider_src}/settings.json" "${prefix_dir}settings.json"
 
     # Replace relative path with absolute/home-relative path in settings.json for pre-built/extracted plugins for Claude and Codex
     local global_dest_plugin="\$HOME/.claude/plugins/performance-agent-standards"
-    if [[ "$provider" == "codex" ]]; then
-      global_dest_plugin="\$HOME/.codex/plugins/performance-agent-standards"
-    fi
-    if [[ -f "${prefix_dir}settings.json" ]]; then
-      sed -i "s|\"./scripts/validate-format.sh\"|\"$global_dest_plugin/scripts/validate-format.sh\"|g" "${prefix_dir}settings.json"
-    fi
+      [[ "$provider" == "codex" ]] && global_dest_plugin="\$HOME/.codex/plugins/performance-agent-standards"
+      [[ -f "${prefix_dir}settings.json" ]] && sed -i "s|\"./scripts/hooks/|\"$global_dest_plugin/scripts/hooks/|g" "${prefix_dir}settings.json"
   fi
 
   # 4. Copy Common Scripts
   local scripts_dest="${provider_dist}/scripts"
   mkdir -p "$scripts_dest"
-  cp "${BASE_DIR}/scripts/parse-hook-input.sh" "$scripts_dest/"
-  cp "${BASE_DIR}/scripts/validate-format.sh" "$scripts_dest/"
+  cp -r "${BASE_DIR}/scripts/hooks" "$scripts_dest/"
 
   # 5. Compile Provider Skills
   compile_provider_skills "$provider" "${prefix_dir}skills"

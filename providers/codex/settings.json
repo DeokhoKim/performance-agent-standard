@@ -1,12 +1,36 @@
 {
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/hooks/pre-tool/inject-lang-standard.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|Cmd",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/hooks/pre-tool/bash-guard.sh"
+          },
+          {
+            "type": "command",
+            "command": "./scripts/hooks/pre-tool/git-guard.sh"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write|MultiEdit",
         "hooks": [
           {
             "type": "command",
-            "command": "./scripts/validate-format.sh"
+            "command": "./scripts/hooks/post-tool/validate-format.sh"
           }
         ]
       }

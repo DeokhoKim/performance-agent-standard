@@ -34,9 +34,9 @@ Step: 4. PR Message Generation:
 - Rule: If comprehensive → derive PR title and description from commits only.
 - Rule: If NOT comprehensive or `IS_TRIVIAL=false` → derive PR title and description from `DIFF_FILE`.
 - Format: If no workspace-specific PR template is provided, follow this structured format:
-  1. **Summary**: Explain what the changes are, what they affect, and what they mean for the project.
-  2. **Concerns**: Note potential risks, regressions, or areas requiring careful review.
-  3. **Key Changes**: Provide a bulleted list of the most significant code changes.
+  1. **Summary**: Explain what the changes are, what they affect, and what they mean for the project. (MUST use full-sentence prose format)
+  2. **Concerns**: Note potential risks, regressions, or areas requiring careful review. (Choose the format—such as an itemized list with prose explanations—that best explains the specific concern points)
+  3. **Key Changes**: Provide a bulleted list of the most significant code changes. (MUST use an itemized, concise fragment format)
 - Rule: Always prioritize and respect any workspace-specific PR template if one exists. Fall back to the structured format above only if no template is found.
 - Language: Generate in `[language]` (default Korean).
 

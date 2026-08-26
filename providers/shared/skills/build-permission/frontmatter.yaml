@@ -1,0 +1,2 @@
+name: build-permission
+description: Compiles layer-separated allowlists into platform-specific configurations for AI agents.

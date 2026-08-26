@@ -21,6 +21,8 @@ Step: 1. Pre-flight Validation:
 
 Step: 2. Branch Checkout (if detached):
 - If `IS_DETACHED=true`: generate a short descriptive branch name from `COMMITS_FILE` content.
+- Format: If no workspace-specific branch naming rule exists, use conventional categorization prefixes (e.g., `feat/<name>`, `fix/<name>`, `docs/<name>`, `chore/<name>`).
+- Rule: Always prioritize and respect any workspace-specific branch naming conventions if they exist.
 - Rule: Execute `git checkout -b <branch-name>` immediately. Update `CURRENT_BRANCH` to the new name.
 
 Step: 3. Remote Push:

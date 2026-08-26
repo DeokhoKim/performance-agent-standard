@@ -25,7 +25,10 @@ Step: 3. Commit Message Generation:
 - Format: Conventional Commits (`<type>(<scope>): <subject>` + body).
 - Language: Use `[language]` if specified, otherwise default to Korean (한국어).
 - Subject: Max 50 chars, imperative mood, no trailing period.
-- Body: Wrapped at 72 chars. Must explicitly explain: (1) detailed changes, (2) what they will affect, and (3) what they mean for the project. MUST use an itemized, concise fragment format (e.g., bulleted short phrases, noun-endings) rather than full-sentence prose.
+- Body: Wrapped at 72 chars. Follow this structured format:
+  1. **Summary**: Provide a full-sentence prose overview explaining what this commit means and its overall impact before detailing the changes.
+  2. **Detailed Changes**: Provide a bulleted list of the specific code changes. MUST use an itemized, concise fragment format (e.g., bulleted short phrases, noun-endings).
+  3. **Affected Areas**: Note which features, modules, or flows will be affected by these changes.
 
 Step: 4. Execution:
 - Rule: Execute `git commit -m "<message>"` immediately. No user confirmation required.

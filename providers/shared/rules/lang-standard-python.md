@@ -9,8 +9,13 @@ Req: Immutable & Efficient Data Structures: Enforce state predictability and min
   - Rule: Enforce `frozen=True` to guarantee state immutability for static analyzers, `slots=True` to avoid `__dict__` creation for memory efficiency, and `kw_only=True` to prevent parameter ordering bugs. Mandate `dataclasses.replace()` for all state updates.
 
 Section: Control Flow & Idioms
-Req: Structural Pattern Matching: Simplify complex branching and destructuring.
-- Rule: Match-Case Destructuring: Utilize Python 3.10+ `match`/`case` statements when destructuring complex dictionaries, API responses, or JSON objects to replace convoluted `if`/`elif` chains.
+Req: Switch Patterns & Destructuring: Simplify complex branching and data extraction.
+- Rule: Prefer Switch Patterns: Exclusively prefer Python 3.10+ `match`/`case` (switch) statements over a series of `if/elif/else` patterns or legacy dictionary-based dispatch maps for discrete control flow routing.
+- Rule: Match-Case Destructuring: Utilize `match`/`case` statements when destructuring complex dictionaries, API responses, or JSON objects.
+
+Req: Branch Delegation: Abstract complex conditional logic to enhance readability.
+- Rule: Delegate Branching Flows: Extract condition-heavy branching logic into pre-created helper functions to preserve primary control flow readability.
+  - Rule: Utilize inline delegation (e.g., closures, inner functions, or lambdas) for simple, strictly localized branching.
 
 Req: EAFP Principle: Prefer exception handling over preemptive checks.
 - Rule: Exception-Driven Flow: Adopt the "Easier to Ask Forgiveness than Permission" (EAFP) idiom. Rely on localized `try/except` blocks for control flow rather than excessive "Look Before You Leap" (LBYL) state checks.

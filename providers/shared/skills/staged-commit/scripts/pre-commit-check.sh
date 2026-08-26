@@ -40,5 +40,10 @@ staged_count=$(git diff --cached --numstat | wc -l)
 }
 
 log_info "${staged_count} file(s) staged for commit."
-printf -- "---\n"
-git diff --cached
+diff_file=$(mktemp /tmp/commit-diff-XXXXXX.patch)
+git diff --cached > "$diff_file"
+staged_lines=$(wc -l < "$diff_file")
+
+printf "STAGED_COUNT=%s\n" "$staged_count"
+printf "STAGED_LINES=%s\n" "$staged_lines"
+printf "DIFF_FILE=%s\n" "$diff_file"

@@ -96,6 +96,8 @@ git log --no-merges "${resolved_target}..HEAD" > "$commits_file"
 diff_file=$(mktemp /tmp/pr-diff-XXXXXX.patch)
 git diff "${resolved_target}..HEAD" > "$diff_file"
 
+diff_lines=$(wc -l < "$diff_file")
+
 # --- Output: minimal KEY=value block, all bulk data in files ---
 printf "TARGET_BRANCH=%s\n"   "$target_branch"
 printf "RESOLVED_TARGET=%s\n" "$resolved_target"
@@ -104,6 +106,7 @@ printf "IS_DETACHED=%s\n"     "$is_detached"
 printf "IS_TRIVIAL=%s\n"      "$is_trivial"
 printf "COMMITS_FILE=%s\n"    "$commits_file"
 printf "DIFF_FILE=%s\n"       "$diff_file"
+printf "DIFF_LINES=%s\n"      "$diff_lines"
 
 # Preserve temp files for the agent — disable cleanup trap
 trap - EXIT

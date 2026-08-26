@@ -6,3 +6,4 @@ arguments:
     description: PR status. 'draft' (default) or 'ready'.
   - name: language
     description: Language for the PR title and description. Defaults to Korean.
+agent: general-purpose

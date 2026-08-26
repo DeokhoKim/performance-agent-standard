@@ -17,10 +17,12 @@ Step: 1. Pre-flight Validation:
 - Run `scripts/pre-pr-check.sh [target]` (pass `[target]` only if specified).
 - Rule: Agent MUST NOT run any manual git/gh inspection commands (e.g., `git log`, `git diff`, `git branch`, `gh repo view`). Rely entirely on `pre-pr-check.sh` for all environment and context data.
 - Rule: If script exits non-zero → display stderr, suggest action, and stop.
-- Parse stdout as `KEY=value` pairs: `TARGET_BRANCH`, `RESOLVED_TARGET`, `CURRENT_BRANCH`, `IS_DETACHED`, `IS_TRIVIAL`, `COMMITS_FILE`, `DIFF_FILE`.
+- Parse stdout as `KEY=value` pairs: `TARGET_BRANCH`, `RESOLVED_TARGET`, `CURRENT_BRANCH`, `IS_DETACHED`, `IS_TRIVIAL`, `COMMITS_FILE`, `DIFF_FILE`, `DIFF_LINES`.
 
 Step: 2. Branch Checkout (if detached):
 - If `IS_DETACHED=true`: generate a short descriptive branch name from `COMMITS_FILE` content.
+- Format: If no workspace-specific branch naming rule exists, use conventional categorization prefixes (e.g., `feat/<name>`, `fix/<name>`, `docs/<name>`, `chore/<name>`).
+- Rule: Always prioritize and respect any workspace-specific branch naming conventions if they exist.
 - Rule: Execute `git checkout -b <branch-name>` immediately. Update `CURRENT_BRANCH` to the new name.
 
 Step: 3. Remote Push:
@@ -31,6 +33,11 @@ Step: 4. PR Message Generation:
 - Evaluate whether commit messages are comprehensive (subject + explanatory body).
 - Rule: If comprehensive → derive PR title and description from commits only.
 - Rule: If NOT comprehensive or `IS_TRIVIAL=false` → derive PR title and description from `DIFF_FILE`.
+- Format: If no workspace-specific PR template is provided, follow this structured format:
+  1. **Summary**: Explain what the changes are, what they affect, and what they mean for the project.
+  2. **Concerns**: Note potential risks, regressions, or areas requiring careful review.
+  3. **Key Changes**: Provide a bulleted list of the most significant code changes.
+- Rule: Always prioritize and respect any workspace-specific PR template if one exists. Fall back to the structured format above only if no template is found.
 - Language: Generate in `[language]` (default Korean).
 
 Step: 5. PR Creation:

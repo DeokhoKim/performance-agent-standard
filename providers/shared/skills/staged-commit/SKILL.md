@@ -15,9 +15,10 @@ Step: 1. Pre-flight Validation:
 - Run the pre-commit script `scripts/pre-commit-check.sh`.
 - Rule: Agent MUST NOT perform manual check commands (e.g., `git status`, `git diff`). Rely entirely on `pre-commit-check.sh`.
 - Rule: If `pre-commit-check.sh` fails (exit status > 0) → display output, suggest action, and stop execution immediately.
+- Parse stdout as `KEY=value` pairs: `STAGED_COUNT`, `STAGED_LINES`, `DIFF_FILE`.
 
 Step: 2. Context Collection:
-- Rule: Use the output of `pre-commit-check.sh` (from Step 1) as the sole diff context. Do NOT run any additional git commands.
+- Rule: Read the temp file at the `DIFF_FILE` path output by `pre-commit-check.sh` as the sole diff context. Do NOT run any additional git commands.
 - Rule: `git commit` always applies staged changes to the current HEAD regardless of branch state (attached or detached). No branch comparison is needed or performed.
 
 Step: 3. Commit Message Generation:

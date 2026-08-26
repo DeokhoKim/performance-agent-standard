@@ -1,19 +1,17 @@
-# Active Workspace Hygiene and Speculative Reading Restrictions
-
-Def: Intermediate Implementation → Any source file, script, or configuration that does not belong to production-facing APIs, core input/output interfaces, user interfaces, or final distribution targets.
-Def: Intermediate Document → Any volatile, transitional, or task-specific document created as a temporary developmental aid that is not explicitly defined as finalized, immutable, or system-required.
+# Active Workspace Hygiene
 
 Section: Speculative Reading Restrictions
-Req: Prevent Speculative File Access: Minimize target file reads to strictly relevant, non-transitional items.
-- Rule: Agents MUST NOT read or scan intermediate implementations or documents unless the current user instruction explicitly requires inspecting or editing them.
-- Rule: Speculative searching or pattern-matching (e.g., grepping for files by name or common keywords) is prohibited.
-- Rule: Speculative reading or search is ONLY permitted when the agent is blocked by a concrete tool execution, compilation, or dependency resolution error that requires discovering a missing file or path.
+Req: Targeted File Access: Restrict inspection strictly to immediate task requirements to prevent context bloat.
+- Rule: Need-to-Know Reading: Read files ONLY if directly user-referenced || required to resolve concrete compiler/runtime blockers.
+- Rule: Scoped Search & Exclusions: Confine searches to specific subdirectories, file extensions, && exact symbols; NEVER read `.env`, lockfiles (`package-lock.json`, `poetry.lock`, `Cargo.lock`), build outputs, || test fixtures unless explicitly tasked.
+- Rule: Surgical Line Slicing: Locate exact line targets with targeted search tools before reading; inspect only relevant line slices for large files rather than loading whole documents.
 
-Section: Git Commit Hygiene
-Req: Prevent Premature Version Control: Avoid staging or committing incomplete changes.
-- Rule: Agents MUST NOT stage (`git add`) or commit (`git commit`) files unless explicitly planned, or specifically required to isolate completed progress.
+Section: Execution Depth & Task Planning
+Req: Plan-First & Batched Execution: Eliminate execution churn, prevent multi-file oscillation, && protect orchestrator context.
+- Rule: Pre-Execution Dependency Mapping: Map cross-file dependencies && draft a complete multi-file plan before editing to avoid broken intermediate states && oscillation loops.
+- Rule: Batched Surgical Edits: Consolidate related modifications into batched surgical edits rather than performing iterative single-line changes with continuous confirmation ping-pong.
+- Rule: Subagent Context Isolation & Handoff: Delegate broad audits, heavy exploration, && large log/output parsing to subagents; subagents MUST return ONLY concise structured summaries || actionable diffs (NEVER dump raw logs || full files into parent context).
 
 Section: Rules Resolution Priority
-Req: Resolve Rule Conflicts: Apply workspace-level priority when resolving duplicate or conflicting guidelines.
-- Rule: Precedence hierarchy is: Local Workspace rules (highest priority) > Plugin rules (medium priority) > Global User rules (lowest priority).
-- Rule: Higher priority rules override conflicting rules defined at lower priority levels.
+Req: Conflict Resolution: Deterministically resolve rule precedence across configuration scopes.
+- Rule: Precedence Hierarchy: Local Workspace rules (highest) > Plugin rules (medium) > Global User rules (lowest); higher-priority rules strictly override conflicting lower-level rules.

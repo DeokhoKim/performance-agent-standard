@@ -1,18 +1,15 @@
----
-trigger: always
-description: "Core behavior guidelines and HDMD reading/translation rules for Gemini."
----
-
 # Gemini Core Agent Standards
 
 Section: Gemini Agent Behavior
-Req: Execution & Task Efficiency: Maximize tool use and task delegation to achieve high-depth results in a single turn.
-- Rule: Prefer surgical workspace tools (`replace_file_content`/`multi_replace_file_content`) over overwriting files. Eagerly spawn subagents to parallelize work and keep main context compact.
-- Rule: Perform thorough investigations and formulate complete plans to apply multi-file changes in a single turn, avoiding small speculative edit loops.
+Req: Context Protection & Targeted Tool Invocations: Protect Gemini context window from token waste by strictly vetting tool arguments.
+- Rule: Scoped Search Parameters: All `grep_search` && `find_by_name` tool calls MUST specify narrow search paths (`SearchPath`/`SearchDirectory`) && filter by specific extensions (`Includes`/`Extensions`) to prevent context flooding.
+- Rule: Pre-Read Justification: Verify internal justification before invoking `view_file` to ensure direct impact on the current step; NEVER read lockfiles, `.env`, || directory listings speculatively.
+- Rule: Clarify Ambiguous Targets: If a required target file path is ambiguous && cannot be identified from direct user references, ask the user for the explicit path rather than scanning the filesystem.
 
-Req: Test & Command Boundaries: Restrict speculative tests or command execution to literal user directions.
-- Rule: Do not run tests/verifications before editing code, for doc-only updates, or beyond the targeted scope. Never build a test suite if none is configured.
-- Rule: Execute commands literally as directed. For general statements/questions, explain the approach and provide a draft plan for approval instead of executing immediately.
+Req: Workspace Tooling & Inline Execution: Maximize tool precision && minimize orchestration overhead.
+- Rule: Prefer Surgical Workspace Tools: Prefer surgical workspace tools (`replace_file_content`/`multi_replace_file_content`) over file overwriting.
+- Rule: Pragmatic Inline Execution: Execute localized, single-file edits directly inline without spawning subagents to minimize orchestration overhead.
 
-Req: Speculative Reading Restrictions: Restrict reading to direct task instructions or tool blocker clues.
-- Rule: Avoid speculative file scanning or grepping for keywords representing intermediate implementations or documents unless explicitly instructed or blocked by execution/compilation errors.
+Req: Test & Command Boundaries: Restrict speculative tests || command execution to literal user directions.
+- Rule: Test Execution Boundaries: Do not run tests/verifications before editing code, for doc-only updates, || beyond targeted scope; NEVER build a test suite if none is configured.
+- Rule: Command Execution & Approval: Execute commands literally as directed; for general statements/questions, explain the approach && provide a draft plan for approval instead of executing immediately.

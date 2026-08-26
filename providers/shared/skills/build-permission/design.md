@@ -21,25 +21,24 @@ Explicit user authorization is mandated for commands that obscure state or bypas
 ### Deny (Catastrophic)
 Strictly blocks `rm -rf /`, `mkfs`, and destructive `chmod` commands. Note that standard `git push --force` or specific file `rm` commands belong in `Ask`, as they are occasionally necessary.
 
-## 2. Structural Regex & Pipeline Security
-A major vulnerability in AI agent CLI tools is that platforms evaluate configurations against the *raw bash string*, not a parsed Abstract Syntax Tree (AST).
+## 2. Native Clean Prefix & Defense-in-Depth
+AI agent CLI platforms evaluate tool execution configurations by inspecting the command invocation starting from its base command.
 
-If a simple prefix wildcard `^git status($| .*)` is used:
-- **Pipeline Bypass**: An agent could execute `git status | git push --force`. The regex matches the safe prefix (`git status`), ignoring the dangerous pipe, allowing a destructive action autonomously.
-
-### The Solution: Boundary Enforcements
-The compiler generates heavily restricted regexes (e.g., `(?:^|\s)git status($|\s+[^|&;]+)`) to safely emulate AST parsing:
-1. **The Word Boundary (`(?:^|\s)`)**: Replaces the strict `^` start-of-line anchor. This allows the command to follow inline environment variables (`FOO=bar git status`) or directory changes (`cd src && git status`), while preventing spoofed substring matches (`legit status`).
-2. **The Metacharacter Block (`($|\s+[^|&;]+)`)**: Replaces the dangerous `.*` wildcard. It explicitly rejects strings containing shell pipes (`|`), ANDs (`&`), or semicolons (`;`) *after* the command. If an agent tries to chain a command, the regex instantly fails, dropping the execution into the `Ask` layer for human review.
+### The Native Clean Prefix Model
+Rather than injecting complex, fragile regex suffix constraints (such as `(?:\s+[^|&;]*)?$`) that break on valid quoted arguments (e.g., `-F';'`, `&` in query strings), the compiler generates **native clean prefixes** and compressed tries:
+1. **Natural Beginning-Command Anchoring**: Command patterns begin directly with the executable command itself (e.g., `command(cat)`, `command(git status)`). No artificial prefix regex tokens (`^` or `(?:^|\s)`) or unanchored prefix globs (`Bash(* cmd *)`) are generated.
+2. **Defense-in-Depth with Lifecycle Hooks**: Dangerous shell patterns (such as `rm -rf /`, `curl | bash`, or destructive command chaining) are intercepted comprehensively by `PreToolUse` lifecycle hooks (`bash-guard.sh` and `git-guard.sh`). This keeps `settings.json` clean, readable in TUI editors (`/permissions`, `/config`), and fully compliant with official platform schemas.
+3. **Precedence Hierarchy**: The strict **Deny > Ask > Allow** precedence guarantees that any blocked pattern in the `deny` list immediately takes priority over allowed prefixes.
 
 ## 3. Provider-Specific Compilation Nuances
 The compiler natively accommodates the parsing engines of four different agent platforms.
 
-- **Antigravity & Gemini**: Fully support Python-style PCRE regular expressions. The compiler aggressively compresses overlapping subcommands using a Trie (e.g., `git (?:branch|log)`).
-- **Codex CLI**: Expects literal Regex strings injected directly into its `PreToolUse` hooks (`hooks.json`).
-- **Claude Code**: The native `permissions.allow` array in Claude's `settings.json` strictly utilizes **Bash Globs** (e.g., `Bash(* git status *)`), not Regex. If fed a Trie regex, Claude's glob parser will fail. The compiler explicitly bypasses Trie compression for Claude, gracefully degrading to raw glob strings to ensure 100% native compatibility.
+- **Antigravity**: Utilizes clean `command(prefix)` and compressed token tries (e.g., `command(git (?:branch|log))`).
+- **Gemini CLI**: Maps decisions to `"allow"`, `"ask_user"`, and `"deny"` with priority scoring.
+- **Codex CLI**: Supports `PreToolUse` lifecycle hooks and sandbox guardrails.
+- **Claude Code**: The native `permissions.allow/deny/ask` arrays strictly utilize beginning-anchored **Bash Globs** (e.g., `Bash(git status)`, `Bash(git status *)`), omitting unanchored prefix wildcards (`* cmd`).
 
 ## 4. The Mutually Exclusive JSON Pattern
 To prevent false-positive matches across layers, `whitelist.json` must be curated using the "Mutually Exclusive Pattern."
 - If *all* options for a tool (e.g., `git diff`) belong in `Allow`, only the base prefix `"git diff"` is written. The compiler auto-expands it.
-- If options straddle layers (e.g., `git stash list` [Allow] vs `git stash pop` [Ask]), they MUST be written out fully. Writing `"git stash"` in Allow would cause a wildcard collision, falsely allowing `git stash pop`.
+- If options straddle layers (e.g., `git stash list` [Allow] vs `git stash pop` [Ask], or `git config --get` [Allow] vs `git config --set` [Ask]), they MUST be written out fully as specific subcommands. Writing bare `"git stash"` or `"git config"` in Allow or Ask would cause a wildcard collision, falsely expanding over subcommands in other layers.

@@ -27,19 +27,14 @@ def compile_layer(commands: list[str]) -> Generator[str, None, None]:
         base_groups[base].append(cmd.strip())
 
     for base, cmds in base_groups.items():
-        # Remove ^ to seamlessly allow inline env vars (FOO="bar" cmd) or chaining (cd dir && cmd)
-        # Use (?:^|\s) to ensure we don't accidentally match substrings (like "legit" for "git")
-        prefix = r"(?:^|\s)"
-        # Safe suffix prevents pipeline chaining AFTER the matched command
-        safe_suffix = r"($|\s+[^|&;]+)"
-
+        # Native clean prefix compilation: Beginning command string is evaluated directly by agent engines.
         if len(cmds) == 1:
-            yield f"{prefix}{cmds[0]}{safe_suffix}"
+            yield cmds[0]
             continue
 
         tre = TrieRegEx(*cmds)
         pattern = tre.regex().replace(r'\ ', ' ')
-        yield f"{prefix}{pattern}{safe_suffix}"
+        yield pattern
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ProviderConfigs:
@@ -56,8 +51,8 @@ def format_rule_for_agent(agent: str, decision: str, regexes: list[str]) -> list
     - **codex**: Uses physical boundary hooks (sandbox_mode) mapping to Regex() filters.
       @see https://platform.openai.com/docs/codex
     - **antigravity**: Employs a terminal jailing triple-list architecture (deny, ask, allow), matching command() directives.
-      @see https://cloud.google.com/gemini/docs/antigravity
-    - **gemini**: Implements a policy engine with integer priorities (lower number = higher priority).
+      @see https://antigravity.google/docs
+    - **gemini**: Implements a policy engine with integer priorities (lower number = higher priority) and decisions ('allow', 'deny', 'ask_user').
       @see https://ai.google.dev/docs/gemini_cli
 
     @param agent The target AI agent provider.
@@ -72,11 +67,12 @@ def format_rule_for_agent(agent: str, decision: str, regexes: list[str]) -> list
             return [f"command({r})" for r in regexes]
         case "gemini":
             priority = 200 if decision == "allow" else 900
+            gemini_decision = "ask_user" if decision == "ask" else decision
             return [
                 {
                     "toolName": "run_shell_command",
                     "commandRegex": r,
-                    "decision": decision,
+                    "decision": gemini_decision,
                     "priority": priority
                 }
                 for r in regexes
@@ -91,8 +87,6 @@ def generate_globs(commands: list[str]) -> list[str]:
         if c:
             globs.append(f"Bash({c})")
             globs.append(f"Bash({c} *)")
-            globs.append(f"Bash(* {c})")
-            globs.append(f"Bash(* {c} *)")
     return globs
 
 def generate_agent_configs(layers: dict[str, list[str]]) -> ProviderConfigs:
@@ -132,40 +126,7 @@ def generate_agent_configs(layers: dict[str, list[str]]) -> ProviderConfigs:
             }
         },
         gemini={
-            "rules": format_rule_for_agent("gemini", "allow", combined_allow_regexes) + format_rule_for_agent("gemini", "deny", deny_regexes)
-        }
-    )
-    sandbox_regexes = list(compile_layer(layers.get("sandbox_allow", [])))
-    deny_regexes = list(compile_layer(layers.get("deny", [])))
-    ask_regexes = list(compile_layer(layers.get("ask", [])))
-
-    combined_allow = allow_regexes + sandbox_regexes
-
-    return ProviderConfigs(
-        claude={
-            "permissions": {
-                "allow": format_rule_for_agent("claude", "allow", combined_allow),
-                "deny": format_rule_for_agent("claude", "deny", deny_regexes),
-                "ask": format_rule_for_agent("claude", "ask", ask_regexes)
-            }
-        },
-        codex={
-            "hooks": {
-                "PreToolUse": {
-                    "allow_patterns": format_rule_for_agent("codex", "allow", combined_allow),
-                    "deny_patterns": format_rule_for_agent("codex", "deny", deny_regexes)
-                }
-            }
-        },
-        antigravity={
-            "permissions": {
-                "allow": format_rule_for_agent("antigravity", "allow", combined_allow),
-                "deny": format_rule_for_agent("antigravity", "deny", deny_regexes),
-                "ask": format_rule_for_agent("antigravity", "ask", ask_regexes)
-            }
-        },
-        gemini={
-            "rules": format_rule_for_agent("gemini", "allow", combined_allow) + format_rule_for_agent("gemini", "deny", deny_regexes)
+            "rules": format_rule_for_agent("gemini", "allow", combined_allow_regexes) + format_rule_for_agent("gemini", "ask", ask_regexes) + format_rule_for_agent("gemini", "deny", deny_regexes)
         }
     )
 

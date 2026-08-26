@@ -1,27 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# ---
+# purpose: PreToolUse hook to intercept and block destructive bash commands.
+# ---
+
 set -euo pipefail
 
-# This script is a PreToolUse hook that acts as a guard for shell commands.
-# It intercepts bash commands to prevent system-level damage.
-
-INPUT=""
-[[ ! -t 0 ]] && INPUT=$(cat)
-
-# Extract the command to execute
-# Works for both Antigravity (run_command / CommandLine) and Claude Code (Bash / command)
-COMMAND_LINE=$(printf "%s" "$INPUT" | jq -r '
-  if .tool_input != null then
-    .tool_input.command // .tool_input.CommandLine // .tool_input.cmd // ""
-  else
-    ( ( .toolCall.arguments // .arguments // {} ) |
-      if type == "string" then (fromjson? // {}) else . end
-    ) | (.CommandLine // .command // .cmd // "")
-  fi
-' 2>/dev/null || true)
-
-[[ -z "$COMMAND_LINE" ]] && { printf '{"decision": "allow"}\n'; exit 0; }
-
-# Blocklist patterns
+# Blocklist patterns for dangerous shell commands
 BLOCKLIST=(
   "rm\s+-rf\s+/"
   "rm\s+-rf\s+/\*"
@@ -34,15 +18,50 @@ BLOCKLIST=(
   "wget\s+.*\|\s*bash"
 )
 
-# Check for blocked patterns
-for pattern in "${BLOCKLIST[@]}"; do
-  printf "%s\n" "$COMMAND_LINE" | grep -Eq "$pattern" && {
-    REASON="Command blocked by bash-guard: matches dangerous pattern '${pattern}'. Please use safer alternatives."
-    ESCAPED_REASON=$(printf "%s" "$REASON" | jq -Rsa .)
-    printf '{"decision": "reject", "message": %s}\n' "$ESCAPED_REASON"
-    exit 0
-  }
-done
+# Extracts command string across Antigravity (CommandLine) and Claude Code (command) payloads.
+parse_command_line() {
+  local json_payload="$1"
+  [[ -z "$json_payload" ]] && return 0
 
-printf '{"decision": "allow"}\n'
-exit 0
+  printf "%s" "$json_payload" | jq -r '
+    if .tool_input != null then
+      .tool_input.command // .tool_input.CommandLine // .tool_input.cmd // ""
+    else
+      ( ( .toolCall.arguments // .arguments // {} ) |
+        if type == "string" then (fromjson? // {}) else . end
+      ) | (.CommandLine // .command // .cmd // "")
+    end
+  ' 2>/dev/null || true
+}
+
+# Evaluates command line against security blocklist patterns.
+evaluate_command() {
+  local command_line="$1"
+  [[ -z "$command_line" ]] && return 0
+
+  for pattern in "${BLOCKLIST[@]}"; do
+    printf "%s\n" "$command_line" | grep -Eq "$pattern" && {
+      local reason="Command blocked by bash-guard: matches dangerous pattern '${pattern}'. Please use safer alternatives."
+      local escaped_reason
+      escaped_reason=$(printf "%s" "$reason" | jq -Rsa .)
+      printf '{"decision": "reject", "message": %s}\n' "$escaped_reason"
+      return 1
+    }
+  done
+
+  return 0
+}
+
+main() {
+  local input=""
+  [[ ! -t 0 ]] && input=$(cat)
+
+  local command_line
+  command_line=$(parse_command_line "$input")
+
+  evaluate_command "$command_line" || exit 0
+
+  printf '{"decision": "allow"}\n'
+}
+
+main "$@"

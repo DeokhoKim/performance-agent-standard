@@ -34,16 +34,16 @@ get_rules_for_ext() {
   local ext="$1"
   case "$ext" in
     rs)
-      printf "%s\n" "lang-standard-common" "lang-standard-native" "lang-standard-rust"
+      printf "%s\n" "code-simplicity" "lang-standard-common" "lang-standard-native" "lang-standard-rust"
       ;;
     cpp|cc|c|hpp|h)
-      printf "%s\n" "lang-standard-common" "lang-standard-native"
+      printf "%s\n" "code-simplicity" "lang-standard-common" "lang-standard-native"
       ;;
     sh|bash)
-      printf "%s\n" "lang-standard-common" "lang-standard-bash"
+      printf "%s\n" "code-simplicity" "lang-standard-common" "lang-standard-bash"
       ;;
     py)
-      printf "%s\n" "lang-standard-common" "lang-standard-python"
+      printf "%s\n" "code-simplicity" "lang-standard-common" "lang-standard-python"
       ;;
     md)
       printf "%s\n" "markdown-writing"

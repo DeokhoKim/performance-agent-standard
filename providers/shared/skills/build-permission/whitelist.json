@@ -12,6 +12,8 @@
     "awk",
     "jq",
     "yq",
+    "tree",
+    "sort",
     "git annotate",
     "git bisect log",
     "git bisect view",

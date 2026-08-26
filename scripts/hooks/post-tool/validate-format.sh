@@ -29,7 +29,7 @@ parse_input() {
   [[ ! -t 0 ]] && json_input=$(cat)
 
   local parsed
-  mapfile -t parsed < <(printf "%s" "$json_input" | "${SCRIPT_DIR}/parse-hook-input.sh")
+  mapfile -t parsed < <(printf "%s" "$json_input" | "${SCRIPT_DIR}/../shared/parse-hook-input.sh")
   WORKSPACE_PATH="${parsed[0]:-}"
   TARGET_FILE="${parsed[1]:-}"
 }
@@ -63,11 +63,10 @@ run_prek() {
   local log_output=""
   local exit_code=0
 
-  if [[ -n "$TARGET_FILE" && -f "$TARGET_FILE" ]]; then
-    log_output=$("$PREK_BIN" run --files "$TARGET_FILE" --color=never 2>&1) || exit_code=$?
-  else
-    log_output=$("$PREK_BIN" run --color=never 2>&1) || exit_code=$?
-  fi
+  local target_args=()
+  [[ -n "$TARGET_FILE" && -f "$TARGET_FILE" ]] && target_args=("--files" "$TARGET_FILE")
+
+  log_output=$("$PREK_BIN" run "${target_args[@]}" --color=never 2>&1) || exit_code=$?
 
   [[ "$exit_code" -eq 0 ]] && return 0
 

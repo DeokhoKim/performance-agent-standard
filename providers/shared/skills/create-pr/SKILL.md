@@ -17,7 +17,7 @@ Step: 1. Pre-flight Validation:
 - Run `scripts/pre-pr-check.sh [target]` (pass `[target]` only if specified).
 - Rule: Agent MUST NOT run any manual git/gh inspection commands (e.g., `git log`, `git diff`, `git branch`, `gh repo view`). Rely entirely on `pre-pr-check.sh` for all environment and context data.
 - Rule: If script exits non-zero → display stderr, suggest action, and stop.
-- Parse stdout as `KEY=value` pairs: `TARGET_BRANCH`, `RESOLVED_TARGET`, `CURRENT_BRANCH`, `IS_DETACHED`, `IS_TRIVIAL`, `COMMITS_FILE`, `DIFF_FILE`, `DIFF_LINES`.
+- Parse stdout as `KEY=value` pairs: `TARGET_BRANCH`, `RESOLVED_TARGET`, `CURRENT_BRANCH`, `IS_DETACHED`, `MATCHED_PR`, `IS_TRIVIAL`, `COMMITS_FILE`, `DIFF_FILE`, `DIFF_LINES`.
 
 Step: 2. Branch Checkout (if detached):
 - If `IS_DETACHED=true`: generate a short descriptive branch name from `COMMITS_FILE` content.
@@ -40,6 +40,6 @@ Step: 4. PR Message Generation:
 - Rule: Always prioritize and respect any workspace-specific PR template if one exists. Fall back to the structured format above only if no template is found.
 - Language: Generate in `[language]` (default Korean).
 
-Step: 5. PR Creation:
-- Rule: Execute `gh pr create --base <TARGET_BRANCH>` with the generated title and body.
-- Flag: Append `--draft` unless `[draft/ready]` is explicitly `ready`.
+Step: 5. PR Creation or Update:
+- Rule: If `MATCHED_PR` exists, update it via `gh pr edit <MATCHED_PR> --title <title> --body <body>`; otherwise, create a new PR via `gh pr create --base <TARGET_BRANCH>`.
+- Flag: When creating a new PR, append `--draft` unless `[draft/ready]` is explicitly `ready`.

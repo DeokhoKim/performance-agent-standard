@@ -9,9 +9,9 @@ Req: Prevent misconfiguration of Antigravity plugins && hooks.
 Section: Claude Code Plugin Verification
 Req: Ensure Claude Code hooks trigger correctly for file modifications.
 - Rule: Hook Lifecycle: Claude Code natively supports `PreToolUse` && `PostToolUse` lifecycle events within `.claude/settings.json`.
-- Rule: Hook Matchers: Claude Code uses `Edit` && `Write` as the internal matcher names for file operations (mapping to tools like `StrReplaceEditTool`). Use a regex matcher like `Write|Edit|Create` to reliably intercept file changes.
+- Rule: Hook Matchers: Claude Code uses `Edit` && `Write` as the internal matcher names for file operations. Use a regex matcher like `Write|Edit` to reliably intercept file changes.
 
 Section: Codex Plugin Verification
 Req: Ensure Codex agent hooks intercept operations correctly.
 - Rule: Hook Execution: Codex supports `PreToolUse` && `PostToolUse` inside `.codex/settings.json`.
-- Rule: Hook Matchers: Codex also resolves tools against matchers like `Edit` && `Write`, allowing shared `Write|Edit|Create` configurations across platforms.
+- Rule: Hook Matchers: Codex uses matchers like `Edit`, `Write`, and `MultiEdit`, requiring `Edit|Write|MultiEdit` configurations.

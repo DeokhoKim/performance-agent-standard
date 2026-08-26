@@ -3,7 +3,7 @@
   "hooks": {
     "PostToolUse": [
       {
-        "matcher": "Write|Edit|Create",
+        "matcher": "Write|Edit",
         "hooks": [
           {
             "type": "command",

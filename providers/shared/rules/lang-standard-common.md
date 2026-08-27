@@ -1,29 +1,29 @@
 # Common Language Standards
 
-Section: Code Quality & Maintainability
-Req: Robust Configuration: Ensure code is easily configurable and maintainable.
-- Rule: Magic Numbers Avoidance: Hard-coded values MUST be strictly avoided in algorithmic implementations, thresholds, and dimensions.
-  - Rule: Parameterize all such values via configuration structures, function arguments, or explicit named constants.
-  - Rule: Provide sensible default values in parameterized configurations to preserve out-of-the-box usability while allowing programmatic overrides.
+Section: Code Quality && Maintainability
+Req: Robust Configuration: Ensure code is easily configurable && maintainable.
+- Rule: Magic Numbers Avoidance: Prohibit hard-coded values in algorithmic implementations, thresholds, && dimensions.
+  - Rule: Parameterized Configs: Parameterize all algorithmic values via configuration structures, function arguments, || explicit named constants.
+  - Rule: Usable Defaults: Provide sensible default values in parameterized configurations to preserve out-of-the-box usability while allowing programmatic overrides.
 
-Req: Balanced Code Quality: Enforce SOLID principles and prioritize code readability without degrading system performance.
-- Rule: SOLID Design Principles: Algorithmic implementations and modular architectures MUST adhere to SOLID principles across all programming languages to ensure high maintainability and testability.
-  - Rule: Apply SOLID principles pragmatically to keep code modular and readable, explicitly avoiding speculative future-proofing, bloated design abstractions, or over-engineered structures that are not required for the immediate task (Simplicity First).
-- Rule: Readability Priority: Emphasize code readability, explicit naming, and clear logical structure unless it actively harms execution performance.
+Req: Balanced Code Quality: Enforce SOLID principles && prioritize code readability without degrading system performance.
+- Rule: SOLID Design Principles: Enforce SOLID principles across modular architectures to guarantee maintainability && testability.
+  - Rule: Pragmatic Application: Apply SOLID pragmatically to keep code modular && readable without unnecessary design overhead (Simplicity First).
+- Rule: Readability Priority: Emphasize code readability, explicit naming, && clear logical structure unless it actively degrades execution performance.
 
-Req: Component Isolation & Testability: Ensure components are decoupled and strictly verifiable.
-- Rule: Dependency Injection: Strictly avoid global states, hardcoded connections, or deeply nested instantiations. Explicitly inject dependencies (e.g., configurations, clients, or services) via initializers, function parameters, or context objects to enable robust mocking and isolated testing.
+Req: Component Isolation && Testability: Ensure components are decoupled && strictly verifiable.
+- Rule: Dependency Injection: Prohibit global states, hardcoded connections, || deeply nested instantiations; explicitly inject dependencies (e.g., configurations, clients, services) via initializers, parameters, || context objects to enable isolated testing.
 
-Req: Scoped Resource & State Management: Ensure safe and guaranteed cleanup of resources and states upon scope exit.
-- Rule: Scoped Return Pattern: Eagerly prefer scoped return and automatic cleanup mechanisms to guarantee the safe release of resources (file descriptors, memory, locks, sockets) and the restoration of state (working directories, environment changes) under any circumstances, including normal exit, early returns, errors, or panics.
-  - Rule: Strictly prevent resource leaks and dangling state mutations by abandoning manual cleanup calls at the end of functions (which are easily bypassed by errors); instead, always leverage language-native resource lifetime management structures for deterministic cleanup.
+Req: Scoped Resource && State Management: Ensure safe && guaranteed cleanup of resources && states upon scope exit.
+- Rule: Scoped Return Pattern: Enforce scoped return && automatic cleanup mechanisms to guarantee safe release of resources (file descriptors, memory, locks, sockets) && restoration of state (working directories, environment changes) across normal exits, early returns, errors, || panics.
+  - Rule: Native Deterministic Cleanup: Prohibit manual cleanup calls at function endpoints; enforce language-native lifetime management structures for deterministic cleanup to eliminate leak vectors from unhandled errors.
 
-Req: Zero-Copy Data Transfer: Minimize memory bandwidth and CPU overhead by eliminating redundant copying.
-- Rule: Reference Views over Deep Copying: Always prefer views, slices, or references over allocating and deep-copying data.
-- Rule: Move Semantics & Ownership: Prefer transferring ownership or moving structures when passing large datasets between contexts.
-- Rule: Memory Mapping & OS Splice: For file I/O and large network streaming, use memory mapping or kernel-level splicing to bypass user-space buffer copying.
+Req: Zero-Copy Data Transfer: Minimize memory bandwidth && CPU overhead by eliminating redundant copying.
+- Rule: Reference Views over Deep Copying: Enforce views, slices, || references over allocating && deep-copying data.
+- Rule: Move Semantics && Ownership: Enforce ownership transfer || moving structures when passing large datasets between contexts.
+- Rule: Memory Mapping && OS Splice: Enforce memory mapping || kernel-level splicing for file I/O && large network streaming to bypass user-space buffer copying.
 
-Section: Concurrency & Parallelism
-Req: Data-Flow Parallelism: Prefer message passing and pipeline architectures over shared-state synchronization.
-- Rule: Avoid Shared State: Do not communicate by sharing memory; instead, share memory by communicating. Avoid raw threads synchronized by manual locks (mutexes, semaphores) to eliminate data races and deadlocks.
-- Rule: Pipeline Architecture: Structure parallel operations as unidirectional data-flow pipelines where data is passed between processing nodes via channels or pipes.
+Section: Concurrency && Parallelism
+Req: Data-Flow Parallelism: Enforce message passing && pipeline architectures over shared-state synchronization.
+- Rule: Memory Sharing via Communication: Prohibit raw threads synchronized by manual locks (mutexes, semaphores); enforce message passing && communication channels to eliminate data races && deadlocks.
+- Rule: Pipeline Architecture: Enforce unidirectional data-flow pipelines where data is passed between processing nodes via channels || pipes.

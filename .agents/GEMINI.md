@@ -10,6 +10,14 @@ Req: Compatibility Assurance: Verify cross-platform compatibility for modificati
 Section: Standard Design Principles
 Req: Rule-Driven Enforcement: Design standards to dictate actionable behavior.
 - Rule: Prefer Rule Over Explain: Exclusively use `- Rule:` directives instead of passive `- Explain:` blocks. Integrate the reasoning directly into the rule (e.g., "Enforce X to guarantee Y") so that executing the rule inherently fulfills the underlying purpose.
+- Rule: Imperative Constraint Precision: Enforce unambiguous imperative action verbs (`Enforce`, `Prohibit`, `Prefix`, `Isolate`, `Require`) in rule directives; prohibit passive or advisory phrasing (`Prefer`, `Consider`, `Should`).
+
+Req: Normative Standardization Modals: Enforce standard specification keywords for unambiguous conformance.
+- Rule: Normative Modal Precision: Enforce RFC-2119/ISO modal verbs (`MUST`/`SHALL` for mandatory requirements, `MUST NOT`/`SHALL NOT` for absolute prohibitions, `MAY` for optional capabilities); prohibit ambiguous advisory language (`SHOULD`/`COULD`) unless documenting explicit, justified trade-offs.
+
+Req: Context Window && Token Density Optimization: Maximize token efficiency without sacrificing semantic constraints.
+- Rule: Zero-Bloat Density: Eliminate conversational fluff, narrative explanations, duplicate tables, && boilerplate; enforce symbolic operators (`&&`, `||`, `!`, `→`) to maximize meaning per token.
+- Rule: Explicit Sub-Rule Naming: Enforce explicit PascalCase rule names on all sub-rules (e.g., `- Rule: <SubRuleName>: ...`) to guarantee structural consistency && addressability.
 
 Req: Hierarchical Supplementation: Structure standards for clean, incremental reading.
 - Rule: Independent Supplementation: Language-specific standards MUST act as concrete, specialized implementations of abstract principles defined in the common standard.

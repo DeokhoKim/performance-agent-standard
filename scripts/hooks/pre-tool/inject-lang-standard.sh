@@ -36,7 +36,10 @@ get_rules_for_ext() {
     rs)
       printf "%s\n" "code-simplicity" "lang-standard-common" "lang-standard-native" "lang-standard-rust"
       ;;
-    cpp|cc|c|hpp|h)
+    cpp|cc|cxx|hpp|h|hxx)
+      printf "%s\n" "code-simplicity" "lang-standard-common" "lang-standard-native" "lang-standard-cpp" "lang-standard-cpp-17"
+      ;;
+    c)
       printf "%s\n" "code-simplicity" "lang-standard-common" "lang-standard-native"
       ;;
     sh|bash)

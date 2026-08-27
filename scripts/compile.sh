@@ -182,6 +182,30 @@ compile_provider_skills() {
       find "$skill_dir" -mindepth 1 -maxdepth 1 -type d | while read -r sub_dir; do
         cp -r "$sub_dir" "${dest_skills_dir}/${skill_name}/"
       done
+
+      # 6. Generate OpenAI Codex / skills.sh metadata sidecar (agents/openai.yaml)
+      if [[ "$provider" == "codex" ]]; then
+        mkdir -p "${dest_skills_dir}/${skill_name}/agents"
+        if [[ -f "${skill_dir}/agents/openai.yaml" ]]; then
+          cp "${skill_dir}/agents/openai.yaml" "${dest_skills_dir}/${skill_name}/agents/openai.yaml"
+        else
+          local allow_implicit="true"
+          grep -q "disable-model-invocation:[[:space:]]*true" "${dest_skills_dir}/${skill_name}/SKILL.md" && allow_implicit="false"
+
+          local display_name="$skill_name"
+          local skill_desc=""
+          skill_desc=$(awk -F': ' '/^description:/ {print $2; exit}' "${dest_skills_dir}/${skill_name}/SKILL.md" | sed -e 's/^"//' -e 's/"$//')
+          [[ -z "$skill_desc" ]] && skill_desc="$skill_name skill"
+
+          {
+            printf "interface:\n"
+            printf "  display_name: \"%s\"\n" "$display_name"
+            printf "  short_description: \"%s\"\n" "$skill_desc"
+            printf "policy:\n"
+            printf "  allow_implicit_invocation: %s\n" "$allow_implicit"
+          } > "${dest_skills_dir}/${skill_name}/agents/openai.yaml"
+        fi
+      fi
     done
   )
 }
@@ -200,6 +224,7 @@ SHARED_RULES=(
   "11|workspace-hygiene|always||Read when planning multi-file tasks, navigating files, or managing context. Enforces pre-execution mapping, batched surgical edits, subagent context isolation, anti-speculation reading, and rule precedence."
   "12|inline-execution|always||Read before executing shell commands or running dynamic inline scripts. Enforces shell-first pipeline parallelism, POSIX utility standards, and Python fallback constraints."
   "13|development-standards|always||Read before building, testing, running, or resolving toolchains. Enforces local environment primacy (Local > System > Assumption), virtualenv priority, native compiler overrides, and README single-read fallback."
+  "14|phase-boundaries|always||Read when transitioning task phases, hitting milestone boundaries, or managing context budgets. Enforces deterministic phase transitions (Continue -> Clear -> Handoff -> Subagent -> Compact) and state externalization."
   "20|markdown-writing|glob|**/*.md, **/*.mdc|Read when creating, editing, or refactoring Markdown files or documentation. Enforces token efficiency, zero context-loss preservation, structural formatting, and semantic tag conventions."
   "30|code-simplicity|glob|*.rs, *.cpp, *.cc, *.c, *.hpp, *.h, *.sh, *.bash, *.py|Read when implementing, designing, or refactoring source code across any language. Enforces simplicity-first hierarchy, platform-native primacy, trust-boundary safety invariants, actionable NOTE/TODO debt tracking, and zero-bloat output formatting."
   "31|lang-standard-common|glob|*.rs, *.cpp, *.cc, *.c, *.hpp, *.h, *.sh, *.bash, *.py|Read when implementing or refactoring source code across any language. Enforces pragmatic SOLID design, dependency injection, scoped resource cleanup (RAII), zero-copy memory patterns, and pipeline concurrency."

@@ -1,6 +1,6 @@
 # Performance Agent Standards Plugin
 
-This repository provides baseline rules, hooks, and guidelines for development environments across multiple agent platforms including **Google Antigravity (Gemini)**, **Claude Code**, and **Codex**.
+This repository provides baseline rules, hooks, and guidelines for development environments across multiple agent platforms.
 
 It uses a flexible compilation architecture to merge shared guidelines (e.g., High-Density Markdown Writing Rules) with provider-specific extensions while preventing config conflicts (like hook structures) across different agents.
 
@@ -11,7 +11,7 @@ It uses a flexible compilation architecture to merge shared guidelines (e.g., Hi
 You can install the rules and hooks for your supported agents using the universal installation script (without cloning the repo), from a local clone, or via pre-packaged zip releases.
 
 #### Option 1: Universal Installation via URL (Recommended)
-This method auto-detects which agents are installed on your system (Antigravity, Legacy Gemini, Claude Code, or Codex), downloads their latest precompiled release ZIPs (or clones and compiles if no release is found), and installs/registers the plugin hooks automatically.
+This method auto-detects installed agent platforms, downloads their latest precompiled release ZIPs (or clones and compiles if no release is found), and installs/registers the plugin hooks automatically.
 
 You can install it with a single shell command:
 ```bash
@@ -34,14 +34,30 @@ Alternatively, you can download a pre-packaged `.zip` release from the GitHub Re
 - **Claude**: Extract to `~/.claude/plugins/performance-agent-standards/`
 - **Codex**: Extract to `~/.codex/plugins/performance-agent-standards/`
 
-### Automated Quality-Control Hooks
+### Automated Lifecycle Hooks
 
-This plugin registers post-tool hooks that run dynamically in your workspace immediately after any file-writing or editing tool completes execution.
+This plugin registers cross-platform lifecycle hooks (`PreToolUse` and `PostToolUse`) that protect repository integrity, dynamically inject relevant coding standards, and validate file modifications across supported agent platforms.
 
+#### Pre-Tool Hooks (`scripts/hooks/pre-tool/`)
+*   **`inject-lang-standard.sh`**:
+    *   **Role**: Dynamically injects context-specific coding and language standards before file modifications (`write_to_file`, `replace_file_content`, `Write`, `Edit`, `MultiEdit`).
+    *   **Behavior**: Inspects the target file extension from tool arguments and injects relevant modular rules (e.g., Rust, C/C++, Bash, Python, Markdown) directly into the agent context.
+*   **`bash-guard.sh`**:
+    *   **Role**: Intercepts shell execution tools (`run_command`, `Bash`, `Cmd`) to block dangerous or destructive system commands.
+    *   **Behavior**: Blocks execution of high-risk patterns such as `rm -rf /`, `rm -rf ~`, `sudo`, `chmod -R 777`, `kill -9`, and unverified remote shell pipes (`curl | bash`, `wget | bash`).
+*   **`git-guard.sh`**:
+    *   **Role**: Intercepts shell execution tools to prevent destructive Git operations.
+    *   **Behavior**: Blocks high-risk Git commands such as `git push --force` / `-f`, `git reset --hard`, `git clean -f`, and `git branch -D`.
+
+#### Post-Tool Hooks (`scripts/hooks/post-tool/`)
 *   **`validate-format.sh`**:
     *   **Role**: Runs `prek` (pre-commit) format and quality checks on modified files after file editing tool executions.
     *   **Behavior**: Resolves workspace repository root, checks for `prek` in the local `.venv`, and runs `prek run --files <file>` (or all files if unspecified), truncating log output to save token consumption.
-    *   **Integration**: Automatically registered under Gemini's `hooks.json`, Claude Code's `settings.json`, and Codex's `settings.json` for post-tool file modification events.
+
+#### Hook Utilities (`scripts/hooks/`)
+*   **`parse-hook-input.sh`**:
+    *   **Role**: Cross-platform JSON payload and environment variable parser.
+    *   **Behavior**: Normalizes payload extraction across supported agent platforms to extract workspace paths, command lines, and target files.
 
 ## Developer Guide
 
@@ -56,34 +72,45 @@ performance-agent-standards/
 ├── pyproject.toml              # Python project packaging and dev tools layout
 ├── README.md                   # This documentation
 ├── providers/                  # Isolated configurations to prevent conflicts
-│   ├── shared/                 # Shared base config & rules
-│   │   └── rules/
-│   │       ├── markdown-writing.md # Markdown Writing Rules
-│   │       ├── markdown-reading.md # Markdown Reading & Translation Rules (Pseudocode)
-│   │       ├── lang-standard-common.md # Common language standards (config/clamping)
-│   │       ├── lang-standard-native.md # Native language standards (sorting/allocations)
-│   │       ├── lang-standard-rust.md   # Rust implementation standards (panics/iterators)
-│   │       ├── lang-standard-bash.md   # Bash scripting safety standards
-│   │       ├── karpathy-guidelines.md  # Shared core engineering and coding instincts
-│   │       ├── inline-execution.md     # Agent inline command and execution standards
-│   │       └── workspace-hygiene.md    # Active workspace hygiene and speculative reading restrictions
+│   ├── shared/                 # Shared base config, rules & skills
+│   │   ├── rules/              # Modular shared rule definitions
+│   │   │   ├── code-simplicity.md      # Minimalist engineering and simplicity standards
+│   │   │   ├── development-standards.md# Toolchain, venv, and environment resolution
+│   │   │   ├── inline-execution.md     # Agent inline command and execution standards
+│   │   │   ├── karpathy-guidelines.md  # Shared core engineering instincts
+│   │   │   ├── lang-standard-bash.md   # Bash scripting safety standards
+│   │   │   ├── lang-standard-common.md # Common language standards (config/clamping)
+│   │   │   ├── lang-standard-native.md # Native language standards (sorting/allocations)
+│   │   │   ├── lang-standard-python.md # Python type hints and modern idioms
+│   │   │   ├── lang-standard-rust.md   # Rust implementation standards (panics/iterators)
+│   │   │   ├── markdown-reading.md     # Markdown Reading & Translation Rules (Pseudocode)
+│   │   │   ├── markdown-writing.md     # Markdown Writing Rules
+│   │   │   └── workspace-hygiene.md    # Active workspace hygiene and navigation rules
+│   │   └── skills/             # Cross-platform skills (build-permission, create-pr, staged-commit)
 │   ├── gemini/                 # Gemini / Antigravity specifics
 │   │   ├── rules/
-│   │   │   └── always-read.md  # Gemini core rules (always read)
-│   │   ├── hooks.json          # Antigravity hook config (nested named hooks)
-│   │   └── plugin.json         # Antigravity plugin manifest
+│   │   │   └── always-read.md  # Core rules (always read)
+│   │   ├── hooks.json          # Hook configuration (PreToolUse & PostToolUse)
+│   │   └── plugin.json         # Plugin manifest
 │   ├── claude/                 # Claude Code specifics
 │   │   ├── rules/
-│   │   │   └── always-read.md  # Claude core rules (always read)
-│   │   └── settings.json       # Claude settings/hooks (.claude/settings.json structure)
+│   │   │   └── always-read.md  # Core rules (always read)
+│   │   └── settings.json       # Settings and hook configuration
 │   └── codex/                  # Codex specifics
 │       ├── rules/
-│       │   └── always-read.md  # Codex core rules (always read)
-│       └── settings.json       # Codex settings/hooks (.codex/settings.json structure)
+│       │   └── always-read.md  # Core rules (always read)
+│       └── settings.json       # Settings and hook configuration
 ├── scripts/                    # Utility and hook scripts
 │   ├── compile.sh              # Merges shared rules & configs with provider-specific ones
 │   ├── install.sh              # Universal installer and update script
-│   └── validate-format.sh      # Post-tool hook script running prek format checks
+│   └── hooks/                  # Agent lifecycle hook implementations
+│       ├── pre-tool/           # Pre-tool execution guards & context injectors
+│       │   ├── bash-guard.sh           # Intercepts & blocks destructive shell commands
+│       │   ├── git-guard.sh            # Intercepts & blocks destructive git operations
+│       │   └── inject-lang-standard.sh # Injects filetype-specific standards into context
+│       ├── post-tool/          # Post-tool execution validation
+│       │   └── validate-format.sh      # Runs prek format & quality checks on modified files
+│       └── parse-hook-input.sh # Cross-platform payload/environment parser
 ```
 
 ### Compilation & Manual Packaging

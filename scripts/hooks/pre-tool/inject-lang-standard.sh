@@ -45,7 +45,7 @@ get_rules_for_ext() {
     py)
       printf "%s\n" "code-simplicity" "lang-standard-common" "lang-standard-python"
       ;;
-    md)
+    md|mdc)
       printf "%s\n" "markdown-writing"
       ;;
   esac

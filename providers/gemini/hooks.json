@@ -6,6 +6,10 @@
         "hooks": [
           {
             "type": "command",
+            "command": "./scripts/hooks/pre-tool/file-guard.sh"
+          },
+          {
+            "type": "command",
             "command": "./scripts/hooks/pre-tool/inject-lang-standard.sh"
           }
         ]

@@ -85,7 +85,7 @@ main() {
   [[ ! -t 0 ]] && json_input=$(cat)
 
   local parsed
-  mapfile -t parsed < <(printf "%s" "$json_input" | bash "${script_dir}/../shared/parse-hook-input.sh")
+  mapfile -t parsed < <(printf "%s" "$json_input" | bash "${script_dir}/../parse-hook-input.sh")
   local target_file="${parsed[1]:-}"
 
   [[ -z "$target_file" ]] && { printf '{"decision": "allow"}\n'; return 0; }

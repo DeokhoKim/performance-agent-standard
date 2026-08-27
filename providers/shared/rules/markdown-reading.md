@@ -39,7 +39,6 @@ Requirement: Rules Interpretation: Rules MUST be machine-interpretable and trans
 | `Req:` / `Requirement:` | Requirement | A high-level goal or functional necessity. |
 | `Rule:` | Rule | A strict guideline or constraint that must be followed. Usually represented as nested bullets (`-`) under a Requirement. |
 | `Def:` / `Definition:` | Definition | Explains a term, concept, or variable. |
-| `Explain:` / `Explanation:` | Explanation | Provides background context or reasoning (meta-commentary). |
 | `Step:` | Step | Used for sequential actions or checklists. |
 
 Section: Language Standards Resolution

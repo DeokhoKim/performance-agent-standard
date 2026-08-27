@@ -1,0 +1,4 @@
+name: review-python
+description: "Hierarchically reviews Python source code against core simplicity, common language standards, and modern Python standards. Use this skill via the /review-python slash command."
+disable-model-invocation: true
+user-invocable: true

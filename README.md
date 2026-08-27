@@ -1,10 +1,16 @@
 # Performance Agent Standards Plugin
 
-This repository provides baseline rules, hooks, and guidelines for development environments across multiple agent platforms.
+This repository provides deterministic rules, runtime hooks, and engineering standards for autonomous development across multi-agent platforms (Google Antigravity, Gemini CLI, Claude Code, and OpenAI Codex).
 
-It uses a flexible compilation architecture to merge shared guidelines (e.g., High-Density Markdown Writing Rules) with provider-specific extensions while preventing config conflicts (like hook structures) across different agents.
+It uses a flexible compilation architecture to merge shared guidelines (e.g., High-Density Markdown Writing, Code Simplicity, Language-Specific Standards) with provider-specific extensions while enforcing runtime safety and token efficiency via zero-overhead POSIX hooks.
+
+---
 
 ## User Guide
+
+### Platform & OS Invariant
+- **Strict Unix/POSIX Support**: This architecture is optimized natively for **Linux and macOS** (POSIX environments).
+- **No Windows Support**: Windows, PowerShell, and `cmd.exe` environments are explicitly not supported to eliminate path-normalization shims, drive-letter layers, and multi-script maintenance.
 
 ### Installation
 
@@ -13,7 +19,6 @@ You can install the rules and hooks for your supported agents using the universa
 #### Option 1: Universal Installation via URL (Recommended)
 This method auto-detects installed agent platforms, downloads their latest precompiled release ZIPs (or clones and compiles if no release is found), and installs/registers the plugin hooks automatically.
 
-You can install it with a single shell command:
 ```bash
 curl -sSfL https://raw.githubusercontent.com/DeokhoKim/performance-agent-standard/main/scripts/install.sh | bash
 ```
@@ -29,39 +34,54 @@ curl -sSfL https://raw.githubusercontent.com/DeokhoKim/performance-agent-standar
     ```
 
 #### Option 2: Pre-packaged Zip Releases
-Alternatively, you can download a pre-packaged `.zip` release from the GitHub Releases page and extract it directly into your agent's isolated plugin directory:
-- **Gemini**: Extract to `~/.gemini/config/plugins/performance-agent-standards/`
-- **Claude**: Extract to `~/.claude/plugins/performance-agent-standards/`
+Download a pre-packaged `.zip` release from GitHub Releases and extract it into your agent's isolated plugin directory:
+- **Antigravity / Gemini**: Extract to `~/.gemini/config/plugins/performance-agent-standards/`
+- **Claude Code**: Extract to `~/.claude/plugins/performance-agent-standards/`
 - **Codex**: Extract to `~/.codex/plugins/performance-agent-standards/`
+
+---
 
 ### Automated Lifecycle Hooks
 
-This plugin registers cross-platform lifecycle hooks (`PreToolUse` and `PostToolUse`) that protect repository integrity, dynamically inject relevant coding standards, and validate file modifications across supported agent platforms.
+This plugin registers cross-platform lifecycle hooks (`PreToolUse`, `PostToolUse`, and `SessionEnd`) that protect repository integrity, conserve context tokens, dynamically inject coding standards, and validate file modifications.
 
-#### Pre-Tool Hooks (`scripts/hooks/pre-tool/`)
-*   **`inject-lang-standard.sh`**:
-    *   **Role**: Dynamically injects context-specific coding and language standards before file modifications (`write_to_file`, `replace_file_content`, `Write`, `Edit`, `MultiEdit`).
-    *   **Behavior**: Inspects the target file extension from tool arguments and injects relevant modular rules (e.g., Rust, C/C++, Bash, Python, Markdown) directly into the agent context.
+#### 1. Pre-Tool Hooks (`scripts/hooks/pre-tool/`)
+*   **`read-once.sh`**:
+    *   **Role**: Conserves LLM context tokens by intercepting redundant file read tool calls (`view_file`, `Read`, `cat`).
+    *   **Behavior**: Tracks file modification timestamps (`mtime`) and snapshots per session in `/tmp/pas-read-cache-${SESSION_ID}/`. If unmodified, it blocks the redundant read and directs the agent to its active context; if modified, it computes a compact unified diff (`diff -u`). Features subagent cache partitioning and dynamic amnesia bypass to prevent false-positive re-read blocks.
+*   **`file-guard.sh`**:
+    *   **Role**: Intercepts file mutation tools (`write_to_file`, `replace_file_content`, `Write`, `Edit`, `MultiEdit`) to protect sensitive assets and lockfiles.
+    *   **Behavior**: Employs `realpath -m` path canonicalization to prevent traversal bypasses (`../`) and blocks unauthorized direct mutations to secrets/keys (`.pem`, `.key`, `id_rsa`), environment state (`.env*`, `*.tfstate`), package lockfiles (`package-lock.json`, `uv.lock`, `Cargo.lock`), and Git metadata (`.git`).
 *   **`bash-guard.sh`**:
-    *   **Role**: Intercepts shell execution tools (`run_command`, `Bash`, `Cmd`) to block dangerous or destructive system commands.
-    *   **Behavior**: Blocks execution of high-risk patterns such as `rm -rf /`, `rm -rf ~`, `sudo`, `chmod -R 777`, `kill -9`, and unverified remote shell pipes (`curl | bash`, `wget | bash`).
+    *   **Role**: Intercepts shell execution tools (`run_command`, `Bash`, `Cmd`) to block dangerous OS commands, in-place file editing bypasses, and mutating GitHub APIs.
+    *   **Behavior**: Blocks recursive deletions (`rm -rf /`, `rm -rf ~`), disk utilities (`dd`, `mkfs`, `fdisk`, `wipefs`, `shred`), privilege escalations (`sudo`, `chmod -R 777`), forkbombs, in-place stream edits (`sed -i`, `perl -i`, `ruby -i`), and destructive GitHub CLI operations (`gh repo delete`, `gh api DELETE/PUT/PATCH`).
 *   **`git-guard.sh`**:
-    *   **Role**: Intercepts shell execution tools to prevent destructive Git operations.
-    *   **Behavior**: Blocks high-risk Git commands such as `git push --force` / `-f`, `git reset --hard`, `git clean -f`, and `git branch -D`.
+    *   **Role**: Intercepts shell execution tools to prevent destructive Git history/tree operations.
+    *   **Behavior**: Features chaining-aware boundary parsing (`GIT_PREFIX`) across subshells, pipelines, and variable prefixes (`cd /repo && git reset --hard`). Blocks force pushes (`push -f`, `--force-with-lease`), destructive tree resets (`reset --hard`, `reset --merge`), untracked file purges (`clean -f`), branch force deletions (`branch -D`), working tree wipes (`checkout .`, `restore .`), stash purges (`stash drop`, `stash clear`), and validation bypasses (`--no-verify`, `commit -n`).
+*   **`inject-lang-standard.sh`**:
+    *   **Role**: Dynamically injects context-specific coding and language standards before file modifications.
+    *   **Behavior**: Inspects the target file extension from tool arguments and injects relevant modular rules (e.g., Rust, C/C++, Bash, Python, Markdown) directly into the agent context.
 
-#### Post-Tool Hooks (`scripts/hooks/post-tool/`)
+#### 2. Post-Tool Hooks (`scripts/hooks/post-tool/`)
 *   **`validate-format.sh`**:
     *   **Role**: Runs `prek` (pre-commit) format and quality checks on modified files after file editing tool executions.
-    *   **Behavior**: Resolves workspace repository root, checks for `prek` in the local `.venv`, and runs `prek run --files <file>` (or all files if unspecified), truncating log output to save token consumption.
+    *   **Behavior**: Resolves workspace repository root, checks for `prek` in the local `.venv`, and runs `prek run --files <file>`, truncating log output to prevent context flooding.
 
-#### Hook Utilities (`scripts/hooks/`)
+#### 3. Session Lifecycle Hooks (`scripts/hooks/session-close/`)
+*   **`cleanup-session.sh`**:
+    *   **Role**: Safely purges ephemeral session caches upon session termination (`SessionEnd`).
+    *   **Behavior**: Recursively removes `/tmp/pas-read-cache-${SESSION_ID}/` with strict path traversal validation, and sweeps orphaned temporary files older than 24 hours.
+
+#### 4. Hook Utilities (`scripts/hooks/`)
 *   **`parse-hook-input.sh`**:
     *   **Role**: Cross-platform JSON payload and environment variable parser.
     *   **Behavior**: Normalizes payload extraction across supported agent platforms to extract workspace paths, command lines, and target files.
 
+---
+
 ## Developer Guide
 
-### Architecture
+### Architecture & File Structure
 
 To prevent structural and syntax conflicts, rules and hooks are isolated by provider in the `providers/` directory and compiled into `dist/` before deployment:
 
@@ -70,7 +90,7 @@ performance-agent-standards/
 ├── .pre-commit-config.yaml     # Git hooks configuration
 ├── .gitignore                  # Git ignore rules for python virtualenvs and cache
 ├── pyproject.toml              # Python project packaging and dev tools layout
-├── README.md                   # This documentation
+├── README.md                   # Repository documentation
 ├── providers/                  # Isolated configurations to prevent conflicts
 │   ├── shared/                 # Shared base config, rules & skills
 │   │   ├── rules/              # Modular shared rule definitions
@@ -90,7 +110,7 @@ performance-agent-standards/
 │   ├── gemini/                 # Gemini / Antigravity specifics
 │   │   ├── rules/
 │   │   │   └── always-read.md  # Core rules (always read)
-│   │   ├── hooks.json          # Hook configuration (PreToolUse & PostToolUse)
+│   │   ├── hooks.json          # Hook configuration (PreToolUse, PostToolUse, SessionEnd)
 │   │   └── plugin.json         # Plugin manifest
 │   ├── claude/                 # Claude Code specifics
 │   │   ├── rules/
@@ -106,16 +126,20 @@ performance-agent-standards/
 │   └── hooks/                  # Agent lifecycle hook implementations
 │       ├── pre-tool/           # Pre-tool execution guards & context injectors
 │       │   ├── bash-guard.sh           # Intercepts & blocks destructive shell commands
+│       │   ├── file-guard.sh           # Intercepts & blocks sensitive path / lockfile mutations
 │       │   ├── git-guard.sh            # Intercepts & blocks destructive git operations
-│       │   └── inject-lang-standard.sh # Injects filetype-specific standards into context
+│       │   ├── inject-lang-standard.sh # Injects filetype-specific standards into context
+│       │   └── read-once.sh            # Conserves tokens & manages diff-mode read cache
 │       ├── post-tool/          # Post-tool execution validation
 │       │   └── validate-format.sh      # Runs prek format & quality checks on modified files
+│       ├── session-close/      # Session lifecycle hooks
+│       │   └── cleanup-session.sh      # Purges /tmp/pas-read-cache-${SESSION_ID} on session close
 │       └── parse-hook-input.sh # Cross-platform payload/environment parser
 ```
 
-### Compilation & Manual Packaging
+---
 
-To compile changes or package the release artifacts manually:
+### Compilation & Manual Packaging
 
 #### 1. Compile Rules
 ```bash
@@ -124,13 +148,13 @@ To compile changes or package the release artifacts manually:
 ```
 
 #### 2. Package Release Artifacts
-You can package the compiled directory structures under `dist/` into separate zip release artifacts to distribute them without requiring end-users to run compilation or install scripts:
+Package the compiled directory structures under `dist/` into zip release artifacts:
 
 ```bash
 # Zip the compiled Antigravity plugin
 (cd dist/antigravity && zip -r ../../performance-agent-standards-antigravity.zip .)
 
-# Zip the compiled legacy Gemini plugin
+# Zip the compiled Gemini plugin
 (cd dist/gemini && zip -r ../../performance-agent-standards-gemini.zip .)
 
 # Zip the compiled Claude Code plugin
@@ -140,28 +164,36 @@ You can package the compiled directory structures under `dist/` into separate zi
 (cd dist/codex && zip -r ../../performance-agent-standards-codex.zip .)
 ```
 
-These generated `.zip` files can then be uploaded as release assets on the GitHub Releases page.
+---
 
 ### Local Development Setup
 
-This project uses `pyproject.toml` to manage formatting and the virtual environment. To set up and prepare the local development environment, use `uv` (a fast Python package installer and resolver):
+This project uses `pyproject.toml` to manage formatting and the virtual environment. Use `uv` for local setup:
 
 1. **Install uv** (if not already installed):
    For installation details, see the [uv documentation](https://github.com/astral-sh/uv).
 
-2. **Synchronize and build the virtual environment**:
-   Run the following command to create a virtual environment (`.venv`) and install all project and development dependencies defined in `pyproject.toml`:
+2. **Synchronize virtual environment**:
    ```bash
    uv sync
    ```
 
-3. **Activate the environment**:
-   Activate the virtual environment to use the installed packages and tools:
-   - **Linux/macOS**:
-     ```bash
-     source .venv/bin/activate
-     ```
-   - **Windows**:
-     ```powershell
-     .venv\Scripts\Activate.ps1
-     ```
+3. **Activate environment** (Linux / macOS):
+   ```bash
+   source .venv/bin/activate
+   ```
+
+---
+
+## References & Acknowledgements
+
+This project synthesizes and adapts core concepts, engineering philosophies, and runtime security architectures from the broader AI agent research and open-source community:
+
+*   **Andrej Karpathy's Engineering Guidelines**:
+    *   The foundational instincts encoded in [`providers/shared/rules/karpathy-guidelines.md`](file:///home/duty/workspace/performance-agent-standards/providers/shared/rules/karpathy-guidelines.md) (Think Before Coding, Simplicity First, Surgical Changes, and Goal-Driven Execution) are directly derived from and inspired by [Andrej Karpathy's open-source skills repository](https://github.com/multica-ai/andrej-karpathy-skills).
+*   **Boucle-Framework Architecture**:
+    *   The runtime hook concepts for shell command gating (`bash-guard`) and git history protection (`git-guard`) are inspired by the security architectures explored in [Bande-a-Bonnot/Boucle-framework](https://github.com/Bande-a-Bonnot/Boucle-framework), re-engineered natively here for multi-platform Unix agent environments (`performance-agent-standards`).
+*   **Ponytail Architecture & Rules**:
+    *   The context token conservation patterns (`read-once`) and minimalist engineering instincts are inspired by the token-efficiency and anti-bloat paradigms explored in [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail).
+*   **Multi-Platform Agent Ecosystems**:
+    *   Runtime hook schemas, lifecycles, and tool interfaces are modeled for deterministic compatibility across [Google Antigravity](https://cloud.google.com/), [Gemini CLI](https://github.com/google-gemini/), [Claude Code](https://docs.anthropic.com/en/docs/claude-code), and [OpenAI Codex](https://openai.com/).

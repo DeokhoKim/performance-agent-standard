@@ -1,0 +1,4 @@
+name: review-rust
+description: "Hierarchically reviews Rust source code against core simplicity, native systems, and Rust language standards. Use this skill via the /review-rust slash command."
+disable-model-invocation: true
+user-invocable: true

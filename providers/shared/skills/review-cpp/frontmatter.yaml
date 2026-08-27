@@ -1,0 +1,4 @@
+name: review-cpp
+description: "Hierarchically reviews C++ source code against core simplicity, native systems, and modern C++ language standards. Use this skill via the /review-cpp slash command."
+disable-model-invocation: true
+user-invocable: true
